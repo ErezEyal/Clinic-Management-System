@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<properties xmlns="CustomDocumentPropperties">
+    <document>
+        <documentNumber></documentNumber>
+        <documentCategory></documentCategory>
+    </document>
+    <employee>
+        <name></name>
+        <hireDate></hireDate>
+        <title></title>
+    </employee>
+    <company>
+        <address></address>
+    </company>
+</properties>

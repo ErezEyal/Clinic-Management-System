@@ -1,0 +1,64 @@
+.Calendar {
+    text-align: center;
+    margin-top: 3em;
+}
+
+.fc a{
+  color: inherit;
+  text-decoration: none !important;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) { 
+  .fc-button {
+    padding: 3px !important;
+  }
+  .fc-toolbar-title {
+    max-width: 8rem;
+  }
+}
+
+.fc-col-header-cell-cushion {
+  font-weight: normal;
+}
+
+.datePicker, .eventTitle {
+  border-color: lightgrey;
+  border-width: 2px;
+  transition: border-color 0.5s;
+}
+
+.eventDate .react-datepicker-wrapper {
+  width: 10.5rem !important;
+}
+
+.datePicker:focus, .eventTitle:focus {
+  border-color: rgb(36, 36, 184);
+}
+
+.react-datepicker__time-list {
+  direction: ltr !important;
+}
+
+table.fc-scrollgrid, table.fc-list-table {
+  background-color: white;
+}
+
+@media only screen and (max-width: 700px) {
+  h2.fc-toolbar-title {
+    font-size: 1.2rem !important;
+  }
+}
+
+th.fc-col-header-cell {
+  background-color: #d0d0d04d !important;
+}
+
+.fc-dayGridDay-view .fc-daygrid-event-harness {
+  padding: 8px;
+  border-top: 1px solid lightgray;
+}
+
+.fc-scroller {
+  overflow: auto !important;
+}

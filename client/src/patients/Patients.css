@@ -1,0 +1,99 @@
+.patientsList {
+    display: inline-block;
+}
+
+.patientsListItem {
+    width: 15rem;
+    cursor: pointer;
+  }
+
+  .patientsListItem:hover:not(.selected)  {
+    background-color: #fafbfc;
+  }
+
+.selected {
+    font-weight: bold;
+    background-color: #f5f9fc;
+}
+
+h1 {
+    margin: 1rem;
+}
+
+.h-90 {
+  height: 90%;
+} 
+
+.scrollVisible {
+  overflow-y: scroll;
+}
+
+.darkText {
+  color: #3b3c3d;
+}
+
+.listWidth {
+  width: 15em;
+} 
+
+.coloredList::before {
+    content: "\2043";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: rgb(103, 137, 250); /* Change the color */
+    font-weight: bold; /* If you want it to be bold */
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em; /* Also needed for space (tweak if needed) */
+    /* margin-right: -1em; Also needed for space (tweak if needed) */
+  }
+
+span.active-tab {
+    border-bottom: 4px solid #33475B;
+    border-radius: 6px;
+}
+
+button.active-tab {
+    font-weight: 500;
+}
+
+.patientNav button:hover:not(.active-tab):not(:focus) {
+  color: gray;
+}
+
+.patientsTable td, .usersTable td{
+  padding: 0.6rem;
+  border-top: 1px solid #dee2e6;
+}
+.patientsTable th, .usersTable th {
+  padding: 0.6rem;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.patientsTableRow:hover, .usersTableRow:hover {
+  background-color: #F5F8FA;
+}
+
+.patientSearch, .userSearch {
+  border-color: blue !important;
+}
+
+.patientModalInput {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0; 
+  border-color: white;
+  border-width: 2px;
+  transition: border-color 0.5s;
+  outline: none;
+  box-shadow: none;
+}
+
+.patientModalInput:hover {
+  border-color: blue;
+  
+}
+.normalInputSize {
+  width: 15rem
+}
+
+.normalLabelWidth {
+  width: 8rem;
+}
