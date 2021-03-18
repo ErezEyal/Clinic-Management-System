@@ -7,11 +7,12 @@ function Audit(props) {
   const [tableContent, setTableContent] = useState([]);
   const [eventsPage, setEventsPage] = useState(0);
   const [searchFocus, setSearchFocus] = useState(false);
-  const AUDIT_URL = "http://localhost:3000/api/events";
+  const AUDIT_URL = process.env.REACT_APP_BASE_API_URL + "events";
   const [filter, setFilter] = useState("");
   const [expandedRow, setExpandedRow] = useState(-1);
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
+  const AUDIT_EXPORT_URL = process.env.REACT_APP_BASE_API_URL + "export-audit"
 
   const searchIcon = (
     <svg
@@ -190,6 +191,31 @@ function Audit(props) {
     setSearchFocus(!searchFocus);
   };
 
+  const handleExport = () => {
+    props.user.getIdToken(true).then((idToken) => {
+      const response = fetch(AUDIT_EXPORT_URL, {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: idToken }),
+      })
+        .then((res) => res.text())
+        .then((res) => {
+          let blob = new Blob([res], { type: "text/csv" });
+          let a = document.createElement("a");
+          a.download = "audit.csv";
+          a.href = URL.createObjectURL(blob);
+          a.dataset.downloadurl = ["text/csv", a.download, a.href].join(":");
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () {
+            URL.revokeObjectURL(a.href);
+          }, 1500);
+        });
+    });
+  };
+
   return (
     <div
       className="container-fluid AuditContainer my-4 mx-md-5 text-right"
@@ -201,7 +227,7 @@ function Audit(props) {
           <h6 className="text-secondary mb-0">{totalCount} פעולות</h6>
         </div>
         <div className="d-inline-block float-left">
-          <button className="btn btn-purple-outline">ייצוא</button>
+          <button className="btn btn-purple-outline" onClick={handleExport}>ייצוא</button>
         </div>
         <hr />
       </div>

@@ -4,10 +4,12 @@ import { useHistory } from "react-router-dom";
 import PatientModal from "./PatientModal";
 import OpenItemsBanner from "../tasks/OpenItemsBanner";
 import PatientCategoriesModal from "./PatientCategoriesModal";
+import ProceduresModal from "./ProceduresModal";
 
 function Patients(props) {
   const [patients, setPatients] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [procedures, setProcedures] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [tableContent, setTableContent] = useState([]);
   const [patientsPage, setPatientsPage] = useState(0);
@@ -17,14 +19,24 @@ function Patients(props) {
   const history = useHistory();
   const [displayPatientModal, setDisplayPatientModal] = useState(false);
   const [displayCategoriesModal, setDisplayCategoriesModal] = useState(false);
+  const [displayProceduresModal, setDisplayProceduresModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientsPhotos, setPatientsPhotos] = useState({});
-  const PATIENTS_URL = "http://localhost:3000/api/patients";
-  const PATIENT_URL = "http://localhost:3000/api/patient";
-  const OPEN_ITEMS_URL = "http://localhost:3000/api/open-items";
-  const PATIENTS_PHOTOS_URL = "http://localhost:3000/api/patients-photos";
-  const PATIENT_CATEGORY_URL = "http://localhost:3000/api/patient-category";
-  const PATIENT_CATEGORIES_URL = "http://localhost:3000/api/patient-categories";
+  const [sortColumn, setSortColumn] = useState("");
+  const PATIENTS_URL = process.env.REACT_APP_BASE_API_URL + "patients";
+  const PATIENT_URL = process.env.REACT_APP_BASE_API_URL + "patient";
+  const OPEN_ITEMS_URL = process.env.REACT_APP_BASE_API_URL + "open-items";
+  const PATIENTS_PHOTOS_URL =
+    process.env.REACT_APP_BASE_API_URL + "patients-photos";
+  const PATIENT_CATEGORY_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-category";
+  const PATIENT_PROCEDURE_URL =
+    process.env.REACT_APP_BASE_API_URL + "procedure";
+  const PATIENT_CATEGORIES_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-categories";
+  const PROCEDURES_URL = process.env.REACT_APP_BASE_API_URL + "procedures";
+  const PATIENTS_EXPORT_URL =
+    process.env.REACT_APP_BASE_API_URL + "export-patients";
 
   const searchIcon = (
     <svg
@@ -181,6 +193,23 @@ function Patients(props) {
   }, []);
 
   useEffect(() => {
+    props.user
+      .getIdToken(true)
+      .then((idToken) => {
+        props
+          .postRequestWithToken(PROCEDURES_URL, idToken)
+          .then((procedures) => {
+            console.log(procedures);
+            setProcedures(procedures);
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
+
+  useEffect(() => {
     if (filteredPatients && filteredPatients.length) {
       if (!props.user) {
         return;
@@ -217,7 +246,7 @@ function Patients(props) {
     }
   }, [patientsPage, filteredPatients]);
 
-  const fetchPatients = () => {
+  const fetchPatients = (sortBy = null) => {
     if (!props.user) {
       return;
     }
@@ -225,10 +254,14 @@ function Patients(props) {
       .getIdToken(true)
       .then((idToken) => {
         props
-          .postRequestWithToken(PATIENTS_URL, idToken, { withoutPhoto: true })
+          .postRequestWithToken(PATIENTS_URL, idToken, {
+            withoutPhoto: true,
+            sortBy: sortBy,
+          })
           .then((data) => {
             setPatients(data);
             setFilteredPatients(data);
+            setFilter("");
           })
           .catch((err) => console.log(err));
       })
@@ -242,14 +275,18 @@ function Patients(props) {
       if (patientsPhotos[patient._id]) {
         patient.picture = patientsPhotos[patient._id];
       }
-      // this func should not handle filtering
       return (
         <tr
           key={index}
-          className="patientsTableRow"
+          className="patientsTableRow pointer"
           style={{ color: "#007A8C" }}
+          onClick={() => showPatientModal(patient)}
         >
-          <td className="pr-lg-4">
+          <td
+            className="pr-lg-2 sticky-col border shadow-sm firstColCells"
+            style={{ right: "0px", backgroundColor: "#F5F8FA" }}
+            onClick={() => showPatient(patient)}
+          >
             <img
               src={
                 patient.picture
@@ -259,47 +296,164 @@ function Patients(props) {
                   : "/female1.png"
               }
               alt={patient.firstName}
-              width="20px"
+              width="30px"
+              height="30px"
               className="d-inline mx-2 rounded-circle"
             ></img>
-            <span className="pointer" onClick={() => showPatient(patient)}>
+            <span className="pointer">
               {patient.firstName + " " + patient.lastName}
             </span>
           </td>
-          <td className="d-none d-md-table-cell">
-            <span className="pointer" onClick={() => showPatient(patient)}>
-              {patient.email}
-            </span>
-          </td>
-          <td className="d-none d-md-table-cell">
-            <span className="pointer" onClick={() => showPatient(patient)}>
+
+          <td className="">
+            <span
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.id}
+            >
               {patient.id}
             </span>
           </td>
+
           <td>
             <span
               dir="ltr"
               className="pointer"
-              onClick={() => showPatient(patient)}
+              onClick={() => showPatientModal(patient)}
+              title={patient.phone}
             >
               {patient.phone}
             </span>
-            <div className="d-inline-block float-left">
-              <span
-                className="pointer mx-1 mx-md-2"
-                onClick={() => showPatientModal(patient)}
-                hidden={!props.role || !props.role.updateCustomer}
-              >
-                {editIcon}
-              </span>
-              <span
-                className="pointer mx-md-2"
-                onClick={() => deletePatient(patient)}
-                hidden={!props.role || !props.role.deleteCustomer}
-              >
-                {removeIcon}
-              </span>
-            </div>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer d-block text-truncate"
+              onClick={() => showPatientModal(patient)}
+              title={patient.category ? patient.category.join(", ") : ""}
+            >
+              {patient.category ? patient.category.join(", ") : ""}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer d-block text-truncate"
+              onClick={() => showPatientModal(patient)}
+              title={getDateString(patient.birthDate)}
+            >
+              {getDateString(patient.birthDate)}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.city}
+            >
+              {patient.city}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.address}
+            >
+              {patient.address}
+            </span>
+          </td>
+
+          <td className="">
+            <span
+              className="pointer d-block text-truncate"
+              onClick={() => showPatientModal(patient)}
+              title={patient.email}
+            >
+              {patient.email}
+            </span>
+          </td>
+
+          <td className="">
+            <span
+              className="pointer d-block text-truncate"
+              onClick={() => showPatientModal(patient)}
+              title={patient.procedures ? patient.procedures.join(", ") : ""}
+            >
+              {patient.procedures ? patient.procedures.join(", ") : ""}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.comment}
+            >
+              {patient.comment}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.gender === "female" ? "נקבה" : "זכר"}
+            >
+              {patient.gender === "female" ? "נקבה" : "זכר"}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.passport}
+            >
+              {patient.passport}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.bool1}
+            >
+              {patient.bool1}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.bool2}
+            >
+              {patient.bool2}
+            </span>
+          </td>
+
+          <td>
+            <span
+              dir="ltr"
+              className="pointer"
+              onClick={() => showPatientModal(patient)}
+              title={patient.bool3}
+            >
+              {patient.bool3}
+            </span>
           </td>
         </tr>
       );
@@ -307,15 +461,303 @@ function Patients(props) {
     tableRows = tableRows.slice(patientsPage * 10, patientsPage * 10 + 10);
     const table = [
       <thead key="1">
-        <tr style={{ backgroundColor: "#F5F8FA" }}>
-          <th className="pr-lg-5 border font-weight-normal">שם</th>
-          <th className="border font-weight-normal d-none d-md-table-cell">
-            כתובת מייל
+        <tr style={{ backgroundColor: "#F5F8FA" }} className="patientsHeader">
+          <th
+            className="pr-lg-3 border font-weight-normal sticky-col firstCol pointer patientsHeaderCell shadow-sm"
+            style={{ width: "17rem", right: "0px", backgroundColor: "#F5F8FA" }}
+            onClick={() => handleSorting("firstName")}
+          >
+            <span>שם הלקוח</span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.firstName || sortColumn.firstName === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.firstName || sortColumn.firstName === -1}
+            >
+              &#8593;
+            </span>
           </th>
-          <th className="border font-weight-normal d-none d-md-table-cell">
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("id")}
+          >
             תעודת זהות
+            <span
+              className="mr-2"
+              hidden={!sortColumn.id || sortColumn.id === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.id || sortColumn.id === -1}
+            >
+              &#8593;
+            </span>
           </th>
-          <th className="border font-weight-normal ">מספר טלפון</th>
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("phone")}
+          >
+            מספר טלפון
+            <span
+              className="mr-2"
+              hidden={!sortColumn.phone || sortColumn.phone === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.phone || sortColumn.phone === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("category")}
+          >
+            שיוך
+            <span
+              className="mr-2"
+              hidden={!sortColumn.category || sortColumn.category === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.category || sortColumn.category === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("birthDate")}
+          >
+            תאריך לידה
+            <span
+              className="mr-2"
+              hidden={!sortColumn.birthDate || sortColumn.birthDate === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.birthDate || sortColumn.birthDate === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("city")}
+          >
+            עיר
+            <span
+              className="mr-2"
+              hidden={!sortColumn.city || sortColumn.city === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.city || sortColumn.city === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("address")}
+          >
+            כתובת מגורים
+            <span
+              className="mr-2"
+              hidden={!sortColumn.address || sortColumn.address === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.address || sortColumn.address === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("email")}
+          >
+            כתובת מייל
+            <span
+              className="mr-2"
+              hidden={!sortColumn.email || sortColumn.email === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.email || sortColumn.email === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("procedures")}
+          >
+            פעולות
+            <span
+              className="mr-2"
+              hidden={!sortColumn.procedures || sortColumn.procedures === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.procedures || sortColumn.procedures === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("comment")}
+          >
+            הערות
+            <span
+              className="mr-2"
+              hidden={!sortColumn.comment || sortColumn.comment === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.comment || sortColumn.comment === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("gender")}
+          >
+            מין
+            <span
+              className="mr-2"
+              hidden={!sortColumn.gender || sortColumn.gender === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.gender || sortColumn.gender === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("passport")}
+          >
+            מספר דרכון
+            <span
+              className="mr-2"
+              hidden={!sortColumn.passport || sortColumn.passport === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.passport || sortColumn.passport === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("bool1")}
+          >
+            שדה1
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool1 || sortColumn.bool1 === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool1 || sortColumn.bool1 === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("bool2")}
+          >
+            שדה2
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool2 || sortColumn.bool2 === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool2 || sortColumn.bool2 === -1}
+            >
+              &#8593;
+            </span>
+          </th>
+
+          <th
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            style={{ width: "10rem" }}
+            onClick={() => handleSorting("bool3")}
+          >
+            שדה3
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool3 || sortColumn.bool3 === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.bool3 || sortColumn.bool3 === -1}
+            >
+              &#8593;
+            </span>
+          </th>
         </tr>
       </thead>,
       <tbody key="2">{tableRows}</tbody>,
@@ -328,13 +770,27 @@ function Patients(props) {
     setFilter(e.target.value);
     setFilteredPatients(
       patients.filter((patient) => {
-        if (!Object.values(patient).join(" ").includes(e.target.value)) {
+        if (
+          !Object.values(patient).join(" ").includes(e.target.value) &&
+          !getDateString(patient.birthDate).includes(e.target.value)
+        ) {
           return false;
         } else {
           return true;
         }
       })
     );
+  };
+
+  const getDateString = (epochDate) => {
+    try {
+      const date = new Date(epochDate).getDate();
+      const month = new Date(epochDate).getMonth() + 1;
+      const year = new Date(epochDate).getFullYear();
+      return `${date}/${month}/${year}`;
+    } catch {
+      return "חסר";
+    }
   };
 
   const showPatient = (patient) => {
@@ -362,21 +818,34 @@ function Patients(props) {
     if (!props.user) {
       return;
     }
-    props.user
+    return props.user
       .getIdToken(true)
       .then((idToken) => {
-        props
+        return props
           .deleteRequestWithToken(PATIENT_URL, idToken, data)
           .then((data) => {
             setPatients(data);
             setFilteredPatients(data);
             setFilter("");
+            return true;
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {
+            console.log(err);
+            return false;
+          });
       })
       .catch((error) => {
         console.log(error);
+        return false;
       });
+  };
+
+  const showProceduresModal = () => {
+    setDisplayProceduresModal(true);
+  };
+
+  const hideProceduresModal = () => {
+    setDisplayProceduresModal(false);
   };
 
   const showPatientCategoriesModal = () => {
@@ -409,6 +878,65 @@ function Patients(props) {
       });
   };
 
+  const updateProcedures = (procedure, action) => {
+    const data = {
+      procedure: procedure,
+      action: action,
+    };
+    props.user
+      .getIdToken(true)
+      .then((idToken) => {
+        props
+          .patchRequestWithToken(PATIENT_PROCEDURE_URL, idToken, data)
+          .then((procedures) => {
+            console.log(categories);
+            setProcedures(procedures);
+            props.updateProcedures(procedures);
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+
+  const handleExport = () => {
+    props.user.getIdToken(true).then((idToken) => {
+      const response = fetch(PATIENTS_EXPORT_URL, {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: idToken }),
+      })
+        .then((res) => res.text())
+        .then((res) => {
+          let blob = new Blob([res], { type: "text/csv" });
+          let a = document.createElement("a");
+          a.download = "patients.csv";
+          a.href = URL.createObjectURL(blob);
+          a.dataset.downloadurl = ["text/csv", a.download, a.href].join(":");
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () {
+            URL.revokeObjectURL(a.href);
+          }, 1500);
+        });
+    });
+  };
+
+  const handleSorting = (column) => {
+    let filterObject = {};
+    if (sortColumn[column] && sortColumn[column] === -1) {
+      filterObject[column] = 1;
+      setSortColumn(filterObject);
+    } else {
+      filterObject[column] = -1;
+      setSortColumn(filterObject);
+    }
+    fetchPatients(filterObject);
+  };
+
   return (
     <>
       <PatientModal
@@ -416,13 +944,22 @@ function Patients(props) {
         hide={hidePatientModal}
         patient={selectedPatient}
         updatePatient={props.savePatient}
+        deletePatient={deletePatient}
         categories={categories}
+        procedures={procedures}
+        role={props.role}
       />
       <PatientCategoriesModal
         show={displayCategoriesModal}
         hide={hideCategoriesModal}
         categories={categories}
         updateCategories={updateCategories}
+      />
+      <ProceduresModal
+        show={displayProceduresModal}
+        hide={hideProceduresModal}
+        procedures={procedures}
+        updateProcedures={updateProcedures}
       />
       <OpenItemsBanner details={openItems} />
       <div
@@ -432,20 +969,32 @@ function Patients(props) {
         <div className="text-right">
           <div className="d-inline-block">
             <h3 style={{ color: "#007A8C" }}>לקוחות</h3>
-            <h6 className="text-secondary mb-0">{patients.length} לקוחות</h6>
+            <h6 className="text-secondary mb-0 mt-2">
+              {patients.length} לקוחות
+            </h6>
           </div>
           <div className="d-inline-block float-sm-left mt-2 mt-sm-0">
+            <button
+              className="btn btn-purple-outline"
+              onClick={() => showProceduresModal()}
+            >
+              פעולות
+            </button>
             <button
               className="btn btn-purple-outline mx-2"
               onClick={() => showPatientCategoriesModal()}
             >
               שיוכים
             </button>
-            <button className="btn btn-purple-outline">ייצוא</button>
+            <button onClick={handleExport} className="btn btn-purple-outline">
+              ייצוא
+            </button>
             <button
               className="btn mx-2 btn-purple text-white"
               onClick={() => showPatientModal(null)}
-              hidden={!props.role || !props.role.addCustomer}
+              hidden={
+                !props.role || (!props.role.addCustomer && !props.role.admin)
+              }
             >
               הוסף לקוח
             </button>
@@ -474,10 +1023,14 @@ function Patients(props) {
             </div>
           </div>
         </div>
-        <div className="d-flex justify-content-center">
+        <div className="d-flex overflow-auto">
           <table
-            className="text-break w-100 patientsTable bg-white border"
-            style={{ tableLayout: "fixed" }}
+            className="text-break w-100 patientsTable bg-white"
+            style={{
+              tableLayout: "fixed",
+              borderSpacing: "10px",
+              borderCollapse: "separate",
+            }}
           >
             {tableContent}
           </table>

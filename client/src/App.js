@@ -31,21 +31,25 @@ function App() {
   const [users, setUsers] = useState([]);
   const [userPhoto, setUserPhoto] = useState(null);
   const [patientCategories, setPatientCategories] = useState([]);
+  const [procedures, setProcedures] = useState([]);
   const history = useHistory();
-  const PATIENT_URL = "http://localhost:3000/api/patient";
-  const PERMISSIONS_URL = "http://localhost:3000/api/role-permissions";
-  const USERS_URL = "http://localhost:3000/api/users";
-  const PATIENT_CATEGORIES_URL = "http://localhost:3000/api/patient-categories";
+  const PATIENT_URL = process.env.REACT_APP_BASE_API_URL + "patient";
+  const PERMISSIONS_URL =
+    process.env.REACT_APP_BASE_API_URL + "role-permissions";
+  const USERS_URL = process.env.REACT_APP_BASE_API_URL + "users";
+  const PATIENT_CATEGORIES_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-categories";
+  const PROCEDURES_URL = process.env.REACT_APP_BASE_API_URL + "procedures";
 
   const arrayToCSV = (array) => {
     const rows = [
-        ["name1", "city1", "some other info"],
-        ["name2", "city2", "more info"]
+      ["name1", "city1", "some other info"],
+      ["name2", "city2", "more info"],
     ];
-    
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + rows.map(e => e.join(",")).join("\n");
-  }
+
+    let csvContent =
+      "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+  };
 
   useEffect(() => {
     if (!user) {
@@ -72,13 +76,29 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-      if (!user || patientCategories.length) return;
+    if (!user || patientCategories.length) return;
     user
       .getIdToken(true)
       .then((idToken) => {
         postRequestWithToken(PATIENT_CATEGORIES_URL, idToken)
           .then((categories) => {
             setPatientCategories(categories);
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || procedures.length) return;
+    user
+      .getIdToken(true)
+      .then((idToken) => {
+        postRequestWithToken(PROCEDURES_URL, idToken)
+          .then((procedures) => {
+            setProcedures(procedures);
           })
           .catch((err) => console.log(err));
       })
@@ -234,6 +254,10 @@ function App() {
     if (categories) setPatientCategories(categories);
   };
 
+  const updateProcedures = (procedures) => {
+    if (procedures) setProcedures(procedures);
+  };
+
   return (
     <div className="pt-5">
       <BrowserRouter>
@@ -280,6 +304,7 @@ function App() {
               selectPatient={handlePatientSelection}
               savePatient={savePatient}
               updatePatientCategories={updatePatientCategories}
+              updateProcedures={updateProcedures}
             />
           </ProtectedRoute>
 
@@ -294,6 +319,7 @@ function App() {
               patient={selectedPatient}
               savePatient={savePatient}
               categories={patientCategories}
+              procedures={procedures}
             />
           </ProtectedRoute>
 

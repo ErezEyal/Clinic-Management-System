@@ -8,12 +8,12 @@ function Tasks(props) {
   const [tasks, setTasks] = useState([]);
   const [taskGroups, setTaskGroups] = useState([]);
   const [patients, setPatients] = useState([]);
-  const PATIENTS_URL = "http://localhost:3000/api/patients";
-  const TASKS_URL = "http://localhost:3000/api/tasks";
-  const TASK_URL = "http://localhost:3000/api/task";
-  const TASK_GROUPS_URL = "http://localhost:3000/api/taskgroups";
-  const TASK_GROUP_URL = "http://localhost:3000/api/taskgroup";
-  const CLOSED_TASKS_URL = "http://localhost:3000/api/closed-tasks";
+  const PATIENTS_URL = process.env.REACT_APP_BASE_API_URL + "patients";
+  const TASKS_URL = process.env.REACT_APP_BASE_API_URL + "tasks";
+  const TASK_URL = process.env.REACT_APP_BASE_API_URL + "task";
+  const TASK_GROUPS_URL = process.env.REACT_APP_BASE_API_URL + "taskgroups";
+  const TASK_GROUP_URL = process.env.REACT_APP_BASE_API_URL + "taskgroup";
+  const CLOSED_TASKS_URL = process.env.REACT_APP_BASE_API_URL + "closed-tasks";
 
   useEffect(() => {
     if (!props.user) {
@@ -57,7 +57,7 @@ function Tasks(props) {
       .getIdToken(true)
       .then((idToken) => {
         props
-          .postRequestWithToken(PATIENTS_URL, idToken, { withoutPhoto: true })
+          .postRequestWithToken(PATIENTS_URL, idToken)
           .then((data) => {
             const patients = data.map((patient) => {
               return {

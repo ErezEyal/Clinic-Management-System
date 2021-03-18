@@ -46,6 +46,7 @@ const permissions = {
     post: "viewLogs",
   },
   "/api/audit": 1,
+  "/api/templates": 1,
   "/api/task": 1,
   "/api/tasks": 1,
   "/api/open-items": 1,
@@ -72,10 +73,17 @@ const permissions = {
     put: "updateCustomer",
     delete: "deleteCustomer",
   },
+  "/api/export-patients": 1,
+  "/api/export-audit": 1,
+  "/api/export-users": 1,
   "/api/patient-category": {
     patch: "updateCustomer",
   },
+  "/api/procedure": {
+    patch: "updateCustomer",
+  },
   "/api/patient-categories": 1,
+  "/api/procedures": 1,
   "/api/document": {
     post: "createDocs",
   },
@@ -105,7 +113,6 @@ const permissions = {
 app.listen(3001, async () => {
   console.log("Success - server app listening on port 3001\n");
 
-
   // MongoClient.connect(
   //   MONGO_URI,
   //   { useUnifiedTopology: true },
@@ -128,26 +135,35 @@ app.listen(3001, async () => {
 
   await atlasClient.connect();
   db = atlasClient.db(dbName);
-  // db.collection("testCollection").insertOne({ test: "yes" });
-  // db.collection("patients").createIndex( { id : 1 } )
+  db.collection("roles").updateOne(
+    { admin: true },
+    { $set: { admin: true, name: "אדמין" } },
+    { upsert: true }
+  );
+  db.collection("taskGroups").updateOne(
+    { closedTasks: true },
+    { $set: { title: "מטלות סגורות", closedTasks: true } },
+    { upsert: true }
+  );
+  console.log("Success - connected to DB\n");
 });
 
-const validGetPatientRequest = (req) => {
-  if (
-    req.baseUrl + req.path === "/api/patients" &&
-    req.body.key === wordPluginKey
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-};
+// const validGetPatientRequest = (req) => {
+//   if (
+//     req.baseUrl + req.path === "/api/patients" &&
+//     req.body.key === wordPluginKey
+//   ) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// };
 
 const authorization = async (req, res, next) => {
-  if (validGetPatientRequest(req)) {
-    next();
-    return;
-  }
+  // if (validGetPatientRequest(req)) {
+  //   next();
+  //   return;
+  // }
   const reqPath = req.baseUrl + req.path;
   const idToken = req.body.idToken || "";
   const isValid = await validateToken(idToken)
@@ -182,9 +198,7 @@ const userIsAllowed = (role, path, method) => {
   if (!permissions[path]) return false;
   const requiredPermission =
     permissions[path] !== 1 ? permissions[path][method] : 1;
-  // console.log("path", permissions[path])
-  // console.log("method", permissions[path][method])
-  console.log("permission needed", requiredPermission);
+  // console.log("permission needed", requiredPermission);
   if (requiredPermission === 1) return true;
   return db
     .collection("roles")
@@ -249,8 +263,56 @@ const createAuditLog = async (action, details, token, moreDetails = null) => {
   db.collection("events").insertOne(event);
 };
 
-const saveEventLog = (event) => {
-  return db.collection("events").insertOne(event);
+const getPatientsCSV = () => {
+  return getPatientsList(null)
+    .then((users) => {
+      let csvStr =
+        "שם פרטי, שם משפחה, מייל, מין, טלפון, תאריך לידה, תעודת זהות, דרכון, שיוך, פעולות, עיר, כתובת, שדה1, שדה2, שדה3\n";
+      for (user of users) {
+        const birthDate = user.birthDate
+          ? new Date(user.birthDate).toLocaleDateString()
+          : user.birthDate;
+        const category = user.category ? user.category.join("; ") : "";
+        const procedures = user.procedures ? user.procedures.join("; ") : "";
+        csvStr += `${user.firstName}, ${user.lastName}, ${user.email}, ${user.gender}, ${user.phone}, ${birthDate}, ${user.id}, ${user.passport}, ${category}, ${procedures}, ${user.city}, ${user.address}, ${user.bool1}, ${user.bool2}, ${user.bool3} \n`;
+      }
+      return csvStr;
+    })
+    .catch((error) => {
+      return "";
+    });
+};
+
+const getAuditEventsCSV = () => {
+  return getAllAuditEvents()
+    .then((events) => {
+      let csvStr = "תאריך, פעולה, משתמש, פרטים, פרטים נוספים\n";
+      for (e of events) {
+        const date = new Date(e.date).toLocaleString();
+        const more = e.moreDetails
+          ? e.moreDetails.replace(/(?:\r\n|\r|\n)/g, ".").replace(",", ";")
+          : "";
+        csvStr += `${date}, ${e.action}, ${e.user}, ${e.details}, ${more}\n`;
+      }
+      return csvStr;
+    })
+    .catch((error) => {
+      return "";
+    });
+};
+
+const getUsersCSV = () => {
+  return listAllUsers()
+    .then((users) => {
+      let csvStr = "שם, מייל, טלפון, אימות דו שלבי, תפקיד\n";
+      for (user of users) {
+        csvStr += `${user.name}, ${user.email}, ${user.phoneNumber}, ${user.mfa}, ${user.role}\n`;
+      }
+      return csvStr;
+    })
+    .catch((error) => {
+      return "";
+    });
 };
 
 const validateToken = async (idToken) => {
@@ -279,6 +341,10 @@ const setUserClaim = (uid, claimObject) => {
       console.log("The following claim was set: ", claimObject);
     })
     .catch((error) => console.log(error));
+};
+
+const getAllAuditEvents = () => {
+  return db.collection("events").find({}).sort({ _id: -1 }).toArray();
 };
 
 const getAuditEvents = async (filter, page) => {
@@ -316,9 +382,28 @@ const getAuditEvents = async (filter, page) => {
   };
 };
 
-const getPatientsList = () => {
-  // return db.collection("patients").find({}).sort({ name: 1 }).toArray();
-  return db.collection("patients").find({}).toArray();
+const getPatientsList = (sortBy, ids = null) => {
+  let sortOrder = { _id: -1 };
+  if (sortBy) {
+    sortOrder = sortBy;
+  }
+  if (ids) {
+    const objectIds = ids.map((id) => {
+      return new ObjectId(id);
+    });
+    return db
+      .collection("patients")
+      .find({ _id: { $in: objectIds } })
+      .sort(sortOrder)
+      .toArray();
+  } else {
+    return db
+      .collection("patients")
+      .find({})
+      .project({ picture: 0 })
+      .sort(sortOrder)
+      .toArray();
+  }
 };
 
 const saveTask = (task) => {
@@ -455,7 +540,7 @@ const createPatient = (patient) => {
         console.log("created patient id", res.insertedId);
         return res.insertedId.toString();
       } else {
-        return false;
+        return "";
       }
     });
 };
@@ -513,10 +598,11 @@ const deletePatient = async (id, idToken) => {
           " " +
           patient.lastName +
           " נמחק מהמערכת";
-        let moreDetails = patient.id ? "תעודת זהות: " + patient.id : "";
+        let moreDetails = "תעודת זהות: " + patient.id + "\n";
+        moreDetails += "מזהה לקוח: " + id;
         createAuditLog("לקוח נמחק מהמערכת", details, idToken, moreDetails);
       }
-      return getPatientsList();
+      return getPatientsList(null);
     })
     .then((patients) => {
       return patients;
@@ -529,13 +615,6 @@ admin.initializeApp({
 });
 
 const getFileLink = async (path) => {
-  console.log(
-    "searching a shared link at " +
-      new Date(Date.now()).toTimeString() +
-      " for " +
-      path
-  );
-
   const argument = {
     path: path,
     //     settings: {
@@ -550,16 +629,9 @@ const getFileLink = async (path) => {
   return dbx
     .sharingCreateSharedLinkWithSettings(argument)
     .then((response) => {
-      console.log(
-        "finished creating shared link at ",
-        new Date(Date.now()).toTimeString()
-      );
-      console.log("response:::: ", response);
       return response.result.url;
     })
     .catch((error) => {
-      console.log("Error creating shared link: ", error);
-      console.log(error.error.error.shared_link_already_exists.metadata.url);
       if (
         error.error &&
         error.error.error &&
@@ -569,44 +641,66 @@ const getFileLink = async (path) => {
       }
       return null;
     });
+};
 
-  // return dbx
-  //   .sharingListSharedLinks({ path: path, direct_only: true })
-  //   .then((res) => {
-  //     if (res.result.links[0].url) {
-  //       console.log(
-  //         "found a shared link at ",
-  //         new Date(Date.now()).toTimeString()
-  //       );
-  //     }
-  //     return res.result.links[0].url;
-  //   })
-  //   .catch(async (error) => {
-  //     console.log("Can't list shared links for: ", path);
-  //     return dbx
-  //       .sharingCreateSharedLinkWithSettings(argument)
-  //       .then((response) => {
-  //         console.log(
-  //           "finished creating shared link at ",
-  //           new Date(Date.now()).toTimeString()
-  //         );
-  //         console.log("response:::: ", response);
-  //         return response.result.url;
-  //       })
-  //       .catch((error) => {
-  //         console.log("Error creating shared link: ", error);
-  //         return null;
-  //       });
-  //   });
+const getTemplateFile = async (path) => {
+  // console.log("paath:", path)
+  let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
+  const fileDownloadArgs = {
+    path: path,
+  };
+
+  return dbx
+    .filesDownload(fileDownloadArgs)
+    .then((response) => {
+      if (response.result && response.result.is_downloadable)
+        return response.result.fileBinary;
+
+      return null;
+    })
+    .catch((error) => {
+      console.log(error);
+      return null;
+    });
+};
+
+const getTemplateNames = async (classified) => {
+  let templatesPath = "/תבניות";
+  let normalTemplatesPath = "/תבניות/מסמכים רגילים";
+  let filesArray = [];
+  let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
+  const listFolderArgs = {
+    path: classified ? templatesPath : normalTemplatesPath,
+    recursive: true,
+    limit: 50,
+  };
+
+  console.log(listFolderArgs.path);
+
+  await dbx
+    .filesListFolder(listFolderArgs)
+    .then((response) => {
+      response.result.entries.forEach((file) => {
+        if (file[".tag"] === "file") {
+          filesArray.push(file.path_lower);
+        }
+      });
+      console.log("has_more", response.result.has_more);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  console.log(filesArray);
+  return filesArray;
 };
 
 const getPatientFiles = async (searchString, photos = false) => {
-  console.log("Starting at ", new Date(Date.now()).toTimeString());
+  console.log("getting files for: ", typeof searchString + " " + searchString);
   const photosFolder = "/תמונות";
   const docsFolder = "/מסמכי לקוח";
 
   const folderSearchArgument = {
-    query: searchString,
+    query: searchString.toString(),
     options: {
       path: photos ? photosFolder : docsFolder,
       max_results: 800,
@@ -660,10 +754,6 @@ const getPatientFiles = async (searchString, photos = false) => {
         console.log(error);
       });
   }
-  console.log(
-    "finished getting file names at ",
-    new Date(Date.now()).toTimeString()
-  );
 
   return filesArray;
 };
@@ -812,113 +902,6 @@ const getFilesInFolders = async (searchString) => {
   return filesList;
 };
 
-const getPhotosInFolders = async (searchString) => {
-  const folderSearchArgument = {
-    query: searchString,
-    options: {
-      max_results: 800,
-      filename_only: true,
-    },
-  };
-  let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
-  // get matched folders
-  const folders = await dbx
-    .filesSearchV2(folderSearchArgument)
-    .then((response) => {
-      const matches = response.result.matches;
-      const files = matches.flatMap((match) => {
-        if (match.metadata.metadata[".tag"] !== "folder") {
-          return [];
-        } else {
-          return [match.metadata.metadata.path_lower];
-        }
-      });
-      return files;
-    })
-    .catch((error) => {
-      console.error(error);
-      return [];
-    });
-
-  // const filesSearchArgument = {
-  //   query: searchString,
-  //   options: {
-  //     max_results: 800,
-  //     filename_only: true,
-  //   },
-  // };
-
-  //get files in folders
-  let filesArray = [];
-  for (const folder of folders) {
-    await dbx
-      .filesListFolder({ path: folder })
-      .then((response) => {
-        response.result.entries.forEach((file) => {
-          let isImage = false;
-          imageExtensions.forEach((extension) => {
-            if (file.path_lower.includes(extension)) {
-              isImage = true;
-            }
-          });
-          if (isImage) {
-            filesArray.push(file.path_lower);
-          }
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
-  // get shared links
-  let filesList = [];
-  for (const file of filesArray) {
-    const argument = {
-      path: file,
-      //     settings: {
-      //         requested_visibility: "password",
-      //         link_password: "123456",
-      //         access: "viewer"
-      //     }
-    };
-
-    await dbx
-      .sharingListSharedLinks({ path: file, direct_only: true })
-      .then((res) => {
-        if (res.result.links[0].url) {
-          const fileObject = {
-            path: file,
-            link: res.result.links[0].url,
-          };
-          filesList.push(fileObject);
-        } else {
-          throw "NoSharedLink";
-        }
-      })
-      .catch(async (error) => {
-        console.log("Can't list shared links for: " + file);
-        await dbx
-          .sharingCreateSharedLinkWithSettings(argument)
-          .then((response) => {
-            // if (response.url) {
-            //     throw "no response url";
-            // }
-            const fileObject = {
-              path: file,
-              link: response.url,
-            };
-            filesList.push(fileObject);
-          })
-          .catch((error) => {
-            console.log("Error creating shared link: ", error);
-          });
-      });
-  }
-
-  return filesList;
-};
-
 const uploadFileToDropboxFolder = async (path, file) => {
   let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
   const fileUploadParams = {
@@ -929,8 +912,8 @@ const uploadFileToDropboxFolder = async (path, file) => {
   return (folders = await dbx
     .filesUpload(fileUploadParams)
     .then((response) => {
-      if (response.result.id) {
-        return true;
+      if (response.result.path_lower) {
+        return response.result.path_lower;
       } else {
         console.error(response);
         return false;
@@ -942,12 +925,12 @@ const uploadFileToDropboxFolder = async (path, file) => {
     }));
 };
 
-const getUserPhoto = (uid) => {
-  return db.collection("usersPhotos").findOne({ userId: uid });
-};
-
 const getAllUserPhotos = () => {
   return db.collection("usersPhotos").find().toArray();
+};
+
+const deleteUserPhoto = (uid) => {
+  return db.collection("usersPhotos").deleteOne({ userId: uid });
 };
 
 const getPatientCategories = () => {
@@ -973,6 +956,31 @@ const deletePatientCategory = async (category) => {
     .deleteOne({ name: category });
 
   return getPatientCategories();
+};
+
+const getProcedures = () => {
+  return db.collection("procedures").find().toArray();
+};
+
+const addProcedure = async (procedure) => {
+  const sameProcedure = await db
+    .collection("procedures")
+    .find({ name: procedure })
+    .toArray();
+
+  if (!sameProcedure.length) {
+    await db.collection("procedures").insertOne({ name: procedure });
+  }
+
+  return getProcedures();
+};
+
+const deleteProcedure = async (procedure) => {
+  const sameProcedure = await db
+    .collection("procedures")
+    .deleteOne({ name: procedure });
+
+  return getProcedures();
 };
 
 const listAllUsers = async () => {
@@ -1008,6 +1016,7 @@ const deleteUser = async (uid) => {
     .deleteUser(uid)
     .then(() => {
       console.log("Successfully deleted user");
+      deleteUserPhoto(uid);
     })
     .catch((error) => {
       console.log("Error deleting user:", error);
@@ -1050,12 +1059,15 @@ const changeUserRole = async (uid, newClaim) => {
     });
 };
 
-const createDocFromTemplate = async (fields, patient) => {
-  // console.log("Creating doc for patient ID: ", patient.id)
-  const path = "/docs/patientDoc.docx";
-  console.log("fields: ", fields);
-  const doc = await createDoc("templates/patientDoc.docx", fields);
-  return await uploadFileToDropboxFolder(path, doc);
+const createDocFromTemplate = async (fields, templateName, templateContent, patient) => {
+  const fileName = `${patient.firstName} ${patient.lastName} - ${patient.id || patient.passport} - ${templateName}`
+  const newFilePath = "/מסמכים חדשים/" + fileName;
+  const doc = await createDoc(templateContent, fields);
+  const dPFileLowerPath = await uploadFileToDropboxFolder(newFilePath, doc);
+  if (dPFileLowerPath) {
+    return getFileLink(dPFileLowerPath);
+  }
+  return false;
 };
 
 const getPatientEvents = (patientId) => {
@@ -1075,17 +1087,48 @@ const newPatientEvent = (event) => {
   return db.collection("patientEvents").insertOne(event);
 };
 
-const updatePatientEvent = (event) => {
-  const eventId = ObjectId(event._id);
+const updatePatientEvent = async (event) => {
+  let eventId = null;
+  let query;
+  if (event._id) {
+    eventId = ObjectId(event._id);
+  } else if (event.eventId) {
+    eventId = await db
+      .collection("patientEvents")
+      .findOne({ eventId: event.eventId })
+      .then((event) => {
+        console.log("event: ", event);
+        return ObjectId(event._id);
+      })
+      .catch((err) => null);
+  }
+
+  if (!eventId && !event.eventId) {
+    console.log("Could not find patient event", event);
+    return false;
+  }
+
+  if (eventId) {
+    query = {
+      _id: eventId,
+    };
+  } else {
+    query = {
+      eventId: event.eventId,
+    };
+  }
+
+  console.log("query", query);
+
   delete event._id;
   return db
     .collection("patientEvents")
-    .updateOne({ _id: eventId }, { $set: event })
+    .updateOne(query, { $set: event }, { upsert: true })
     .then((res) => {
       if (res.matchedCount) {
         return true;
       } else {
-        console.log(res);
+        // console.log(res);
         return false;
       }
     })
@@ -1116,6 +1159,7 @@ const setNewPatientTaskEvents = async (previousTask, newTask, userName) => {
         patientId: newTask.patientId,
         userName: userName,
         taskId: item.id,
+        template: "מטלה",
       });
     }
     if (!previousTask) return;
@@ -1148,7 +1192,6 @@ const setNewPatientTaskEvents = async (previousTask, newTask, userName) => {
           console.log("previous", previousItem);
           console.log("new", item);
           if (item.id) {
-            // id should always exist
             const event = events.find((e) => e.taskId === item.id);
             if (event) {
               deletePatientEvent(event._id);
@@ -1160,12 +1203,13 @@ const setNewPatientTaskEvents = async (previousTask, newTask, userName) => {
   }
 };
 
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
-
 const createPatientDPFolder = (patient) => {
-  const folderName = `${patient.firstName} ${patient.lastName} - ${patient.id}`;
+  let folderName;
+  if (patient.id) {
+    folderName = `${patient.firstName} ${patient.lastName} - ${patient.id}`;
+  } else if (patient.passport) {
+    folderName = `${patient.firstName} ${patient.lastName} - ${patient.passport}`;
+  }
   const params = {
     path: "/מסמכי לקוח/" + folderName,
     autorename: true,
@@ -1184,17 +1228,15 @@ const createPatientDPFolder = (patient) => {
     });
 };
 
+app.get("/*", (req, res) => {
+  res.send("OK");
+  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
 app.post("/api/patients", authorization, (req, res) => {
-  getPatientsList().then((patients) => {
-    if (req.body.withoutPhoto) {
-      const smallSizePatients = patients.map((patient) => {
-        delete patient.picture;
-        return patient;
-      });
-      res.json(smallSizePatients);
-    } else {
-      res.json(patients);
-    }
+  let sortBy = req.body.sortBy ? req.body.sortBy : null;
+  getPatientsList(sortBy).then((patients) => {
+    res.json(patients);
   });
 });
 
@@ -1313,7 +1355,6 @@ app.post("/api/audit", (req, res) => {
 });
 
 const taskItemsAuditLog = (previousItems, newItems, taskObject, idToken) => {
-  console.log("How are you?");
   const allItems = previousItems.concat(newItems);
   for (const item of allItems) {
     let action = "";
@@ -1440,7 +1481,6 @@ app.post("/api/task", authorization, async (req, res) => {
           createAuditLog(logTitle, details, req.body.idToken, moreDetails);
         }
         const previousTaskItems = previousTask ? previousTask.items : [];
-        console.log("heyyyy!!????");
         taskItemsAuditLog(
           previousTaskItems,
           req.body.taskDetails.items,
@@ -1583,6 +1623,9 @@ app.post("/api/calendar-events", authorization, (req, res) => {
           end: event.end.dateTime || event.end.date,
           description: event.description || "",
           calendarName: calendar,
+          patientId: event.extendedProperties
+            ? event.extendedProperties.private.patientId
+            : "",
         });
       });
       res.json(events);
@@ -1605,12 +1648,37 @@ app.post("/api/event", authorization, (req, res) => {
       if (response.data && response.data.id) {
         res.json({ res: "OK - event created" });
 
+        let date;
+        try {
+          date = req.body.event.start.dateTime
+            ? new Date(req.body.event.start.dateTime).valueOf()
+            : new Date(req.body.event.start.date).valueOf();
+        } catch {
+          date = "2524654861000";
+        }
+        if (req.body.event.extendedProperties.private.patientId) {
+          newPatientEvent({
+            title: req.body.event.summary,
+            description: req.body.event.description,
+            date: date,
+            patientId: req.body.event.extendedProperties.private.patientId,
+            eventId: response.data.id,
+            userName: req.body.userName,
+            template: "פגישה",
+          });
+        }
+
         const details = "כותרת: " + req.body.event.summary;
         let moreDetails = req.body.event.description
           ? "תיאור: " + req.body.event.description + "\n"
           : "";
         moreDetails += "התחלה: " + JSON.stringify(req.body.event.start) + "\n";
         moreDetails += "סיום: " + JSON.stringify(req.body.event.end) + "\n";
+        moreDetails += req.body.event.extendedProperties.private.patientId
+          ? "מזהה לקוח: " +
+            req.body.event.extendedProperties.private.patientId +
+            "\n"
+          : "";
         moreDetails += "מזהה אירוע: " + response.data.id + "\n";
         moreDetails += "מזהה יומן: " + req.body.calendarName;
         createAuditLog(
@@ -1643,12 +1711,37 @@ app.patch("/api/event", authorization, (req, res) => {
       if (response.data && response.data.id) {
         res.json({ res: "OK - event updated" });
 
+        let date;
+        try {
+          date = req.body.event.start.dateTime
+            ? new Date(req.body.event.start.dateTime).valueOf()
+            : new Date(req.body.event.start.date).valueOf();
+        } catch {
+          date = "2524654861000";
+        }
+        if (req.body.event.extendedProperties.private.patientId) {
+          updatePatientEvent({
+            title: req.body.event.summary,
+            description: req.body.event.description,
+            date: date,
+            patientId: req.body.event.extendedProperties.private.patientId,
+            eventId: response.data.id,
+            userName: req.body.userName,
+            template: "פגישה",
+          });
+        }
+
         const details = "כותרת: " + req.body.event.summary;
         let moreDetails = req.body.event.description
           ? "תיאור: " + req.body.event.description + "\n"
           : "";
         moreDetails += "התחלה: " + JSON.stringify(req.body.event.start) + "\n";
         moreDetails += "סיום: " + JSON.stringify(req.body.event.end) + "\n";
+        moreDetails += req.body.event.extendedProperties.private.patientId
+          ? "מזהה לקוח: " +
+            req.body.event.extendedProperties.private.patientId +
+            "\n"
+          : "";
         moreDetails += "מזהה אירוע: " + response.data.id + "\n";
         moreDetails += "מזהה יומן: " + req.body.calendarName;
         createAuditLog(
@@ -1676,6 +1769,11 @@ app.delete("/api/event", authorization, (req, res) => {
 
         const details = "האירוע " + req.body.eventId + " נמחק מהיומן";
         createAuditLog("אירוע יומן נמחק", details, req.body.idToken);
+
+        db.collection("patientEvents")
+          .findOne({ eventId: req.body.eventId })
+          .then((event) => (event ? deletePatientEvent(event._id) : ""))
+          .catch((error) => console.log(error));
       } else {
         console.log(response);
         res.json({ res: "error - event deletion failed" });
@@ -1684,22 +1782,12 @@ app.delete("/api/event", authorization, (req, res) => {
 });
 
 app.post("/api/patient-files", authorization, (req, res) => {
-  // getFilesInFolders("4476436")
-  //   .then((files) => {
-  //     // console.log(files);
-  //     res.json(files);
-  //   })
-  //   .catch((error) => {
-  //     console.log(error);
-  //     res.json([]);
-  //   });
-  if (!req.body.id) {
+  if (!req.body.id && !req.body.passport) {
     return res.json([]);
   }
 
-  getPatientFiles(req.body.id)
+  getPatientFiles(req.body.id || req.body.passport)
     .then((files) => {
-      // console.log(files);
       res.json(files);
     })
     .catch((error) => {
@@ -1721,19 +1809,11 @@ app.post("/api/patient-file", authorization, (req, res) => {
 });
 
 app.post("/api/patient-photos", authorization, (req, res) => {
-  // getPhotosInFolders("4476436")
-  //   .then((files) => {
-  //     // console.log(files);
-  //     res.json(files);
-  //   })
-  //   .catch((error) => {
-  //     console.log(error);
-  //     res.json([]);
-  //   });
-
-  getPatientFiles(req.body.id, true)
+  if (!req.body.id && !req.body.passport) {
+    return res.json([]);
+  }
+  getPatientFiles(req.body.id || req.body.passport, true)
     .then((files) => {
-      // console.log(files);
       res.json(files);
     })
     .catch((error) => {
@@ -1743,14 +1823,14 @@ app.post("/api/patient-photos", authorization, (req, res) => {
 });
 
 app.post("/api/patient", authorization, (req, res) => {
-  createPatient(req.body.patient).then((result) => {
-    if (result) {
+  createPatient(req.body.patient).then((newPatientId) => {
+    if (newPatientId) {
       createPatientDPFolder(req.body.patient);
       newPatientEvent({
         title: "הלקוח התווסף למערכת",
         description: "",
         date: Date.now(),
-        patientId: result,
+        patientId: newPatientId,
         userName: req.body.userName,
       });
       const details =
@@ -1759,6 +1839,12 @@ app.post("/api/patient", authorization, (req, res) => {
         " התווסף למערכת";
       let moreDetails = req.body.patient.email
         ? " כתובת מייל: " + req.body.patient.email + "\n"
+        : "";
+      moreDetails += req.body.patient.city
+        ? " עיר: " + req.body.patient.city + "\n"
+        : "";
+      moreDetails += req.body.patient.address
+        ? " כתובת מגורים: " + req.body.patient.address + "\n"
         : "";
       moreDetails += req.body.patient.phone
         ? " טלפון: " + req.body.patient.phone + "\n"
@@ -1774,14 +1860,30 @@ app.post("/api/patient", authorization, (req, res) => {
       moreDetails += req.body.patient.id
         ? " תעודת זהות: " + req.body.patient.id + "\n"
         : "";
+      moreDetails += req.body.patient.passport
+        ? " מספר דרכון: " + req.body.patient.passport + "\n"
+        : "";
       moreDetails += req.body.patient.comment
         ? " הערות: " + req.body.patient.comment + "\n"
         : "";
       moreDetails += req.body.patient.category
         ? " שיוך: " + req.body.patient.category.join(", ") + "\n"
         : "";
+      moreDetails += req.body.patient.procedures
+        ? " פעולות: " + req.body.patient.procedures.join(", ") + "\n"
+        : "";
       moreDetails +=
-        " מין: " + (req.body.patient.gender === "male" ? "זכר" : "נקבה");
+        " מין: " + (req.body.patient.gender === "male" ? "זכר" : "נקבה") + "\n";
+      moreDetails += req.body.patient.bool1
+        ? " שדה1: " + req.body.patient.bool1 + "\n"
+        : "";
+      moreDetails += req.body.patient.bool2
+        ? " שדה2: " + req.body.patient.bool2 + "\n"
+        : "";
+      moreDetails += req.body.patient.bool3
+        ? " שדה3: " + req.body.patient.bool3 + "\n"
+        : "";
+      moreDetails += " מזהה לקוח: " + newPatientId;
       createAuditLog(
         "לקוח התווסף למערכת",
         details,
@@ -1796,6 +1898,7 @@ app.post("/api/patient", authorization, (req, res) => {
 });
 
 app.put("/api/patient", authorization, (req, res) => {
+  const patientObjectId = req.body.patient._id;
   updatePatient(req.body.patient).then((result) => {
     res.json({ result: result });
     if (result) {
@@ -1805,6 +1908,12 @@ app.put("/api/patient", authorization, (req, res) => {
         " עודכנו";
       let moreDetails = req.body.patient.email
         ? " כתובת מייל: " + req.body.patient.email + "\n"
+        : "";
+      moreDetails += req.body.patient.city
+        ? " עיר: " + req.body.patient.city + "\n"
+        : "";
+      moreDetails += req.body.patient.address
+        ? " כתובת מגורים: " + req.body.patient.address + "\n"
         : "";
       moreDetails += req.body.patient.phone
         ? " טלפון: " + req.body.patient.phone + "\n"
@@ -1820,14 +1929,30 @@ app.put("/api/patient", authorization, (req, res) => {
       moreDetails += req.body.patient.id
         ? " תעודת זהות: " + req.body.patient.id + "\n"
         : "";
+      moreDetails += req.body.patient.passport
+        ? " מספר דרכון: " + req.body.patient.passport + "\n"
+        : "";
       moreDetails += req.body.patient.comment
         ? " הערות: " + req.body.patient.comment + "\n"
         : "";
       moreDetails += req.body.patient.category
         ? " שיוך: " + req.body.patient.category.join(", ") + "\n"
         : "";
+      moreDetails += req.body.patient.procedures
+        ? " פעולות: " + req.body.patient.procedures.join(", ") + "\n"
+        : "";
       moreDetails +=
-        " מין: " + (req.body.patient.gender === "male" ? "זכר" : "נקבה");
+        " מין: " + (req.body.patient.gender === "male" ? "זכר" : "נקבה") + "\n";
+      moreDetails += req.body.patient.bool1
+        ? " שדה1: " + req.body.patient.bool1 + "\n"
+        : "";
+      moreDetails += req.body.patient.bool2
+        ? " שדה2: " + req.body.patient.bool2 + "\n"
+        : "";
+      moreDetails += req.body.patient.bool3
+        ? " שדה3: " + req.body.patient.bool3 + "\n"
+        : "";
+      moreDetails += " מזהה לקוח: " + patientObjectId;
       createAuditLog(
         "פרטי לקוח עודכנו",
         details,
@@ -1840,20 +1965,26 @@ app.put("/api/patient", authorization, (req, res) => {
 
 app.delete("/api/patient", authorization, (req, res) => {
   deletePatient(req.body.patientId, req.body.idToken).then((patients) => {
-    const smallSizePatients = patients.map((patient) => {
-      delete patient.picture;
-      return patient;
-    });
-    res.json(smallSizePatients);
+    res.json(patients);
   });
 });
 
-app.post("/api/document", authorization, (req, res) => {
-  createDocFromTemplate(req.body.templateFields, req.body.patient)
-    .then((result) => {
-      if (result) {
-        res.json({ success: true });
+app.post("/api/document", authorization, async (req, res) => {
+  const templateContent = await getTemplateFile(req.body.templatePath);
+  if (!templateContent) {
+    res.json({ success: false });
+    return;
+  }
 
+  createDocFromTemplate(
+    req.body.templateFields,
+    req.body.templatePath.split("/").pop(),
+    templateContent,
+    req.body.patient
+  )
+    .then((sharedLink) => {
+      if (sharedLink) {
+        res.json({ success: true, link: sharedLink });
         const details =
           "נוצר מסמך לקוח עבור " +
           req.body.patient.firstName +
@@ -1862,7 +1993,8 @@ app.post("/api/document", authorization, (req, res) => {
         let moreDetails = req.body.patient.id
           ? "תעוזת זהות: " + req.body.patient.id + "\n"
           : "";
-        moreDetails += "מזהה לקוח: " + req.body.patient._id;
+        moreDetails += "מזהה לקוח: " + req.body.patient._id + "\n";
+        moreDetails += "שם המסמך: " + req.body.templatePath.split("/").pop();
         createAuditLog(
           "נוצר מסמך לקוח",
           details,
@@ -2048,7 +2180,17 @@ app.post("/api/patient-event", authorization, async (req, res) => {
     .catch((err) => "");
 
   newPatientEvent(req.body.event)
-    .then((response) => {
+    .then(async (response) => {
+      if (req.body.event.template === "פעולה") {
+        await db
+          .collection("patients")
+          .updateOne(
+            { _id: ObjectId(req.body.event.patientId) },
+            { $addToSet: { procedures: req.body.event.title } }
+          )
+          .catch((err) => console.log(err));
+      }
+
       res.json({ result: "OK" });
 
       const details = " אירוע חדש נוצר עבור " + patientName;
@@ -2086,9 +2228,32 @@ app.delete("/api/patient-event", authorization, async (req, res) => {
     .catch((err) => "");
 
   deletePatientEvent(req.body.eventId)
-    .then((result) => {
+    .then(async (result) => {
       if (result.deletedCount) {
         res.json({ result: "OK" });
+
+        if (event.template === "פעולה") {
+          await db
+            .collection("patientEvents")
+            .findOne({
+              patientId: event.patientId,
+              template: "פעולה",
+              title: event.title,
+            })
+            .then((res) => {
+              if (!res) {
+                db.collection("patients")
+                  .updateOne(
+                    { _id: ObjectId(event.patientId) },
+                    { $pull: { procedures: event.title } }
+                  )
+                  .catch((err) => console.log(err));
+              }
+            })
+            .catch((err) => {
+              console.log("error!", err);
+            });
+        }
 
         const details = " אירוע נמחק עבור " + patientName;
         let moreDetails = "כותרת: " + event.title + "\n";
@@ -2111,17 +2276,61 @@ app.delete("/api/patient-event", authorization, async (req, res) => {
 });
 
 app.patch("/api/patient-event", authorization, async (req, res) => {
+  const eventId = req.body.event._id;
+
   const patientName = await db
     .collection("patients")
     .findOne({ _id: ObjectId(req.body.event.patientId) })
     .then((patient) => patient.firstName + " " + patient.lastName)
     .catch((err) => "");
 
-  const eventId = req.body.event._id;
+  const previousEvent = await db
+    .collection("patientEvents")
+    .findOne({ _id: ObjectId(eventId) })
+    .catch((err) => null);
+
   updatePatientEvent(req.body.event)
-    .then((result) => {
+    .then(async (result) => {
       if (result) {
         res.json({ result: "OK" });
+
+        if (
+          previousEvent &&
+          previousEvent.template === "פעולה" &&
+          (previousEvent.title != req.body.event.title ||
+            req.body.event.template !== "פעולה")
+        ) {
+          await db
+            .collection("patientEvents")
+            .findOne({
+              patientId: previousEvent.patientId,
+              template: "פעולה",
+              title: previousEvent.title,
+            })
+            .then((res) => {
+              if (!res) {
+                db.collection("patients")
+                  .updateOne(
+                    { _id: ObjectId(previousEvent.patientId) },
+                    { $pull: { procedures: previousEvent.title } }
+                  )
+                  .catch((err) => console.log(err));
+              }
+            })
+            .catch((err) => {
+              console.log("error!", err);
+            });
+        }
+
+        if (req.body.event.template === "פעולה") {
+          await db
+            .collection("patients")
+            .updateOne(
+              { _id: ObjectId(req.body.event.patientId) },
+              { $addToSet: { procedures: req.body.event.title } }
+            )
+            .catch((err) => console.log(err));
+        }
 
         const details = " עודכנו פרטי אירוע עבור " + patientName;
         let moreDetails = "כותרת: " + req.body.event.title + "\n";
@@ -2202,7 +2411,7 @@ app.post("/api/open-items", authorization, (req, res) => {
 });
 
 app.post("/api/patients-photos", authorization, (req, res) => {
-  getPatientsList()
+  getPatientsList(null, req.body.patientIds)
     .then((patients) => {
       const patientPhotos = {};
       patients.forEach((patient) => {
@@ -2249,6 +2458,75 @@ app.patch("/api/patient-category", authorization, (req, res) => {
       createAuditLog("נוסף שיוך", details, req.body.idToken);
     });
   }
+});
+
+app.post("/api/export-patients", authorization, (req, res) => {
+  getPatientsCSV().then((csv) => {
+    res.send(csv);
+  });
+});
+
+app.post("/api/export-audit", authorization, (req, res) => {
+  getAuditEventsCSV().then((csv) => {
+    res.send(csv);
+  });
+});
+
+app.post("/api/export-users", authorization, (req, res) => {
+  getUsersCSV().then((csv) => {
+    res.send(csv);
+  });
+});
+
+app.post("/api/procedures", authorization, (req, res) => {
+  getProcedures().then((procedures) => {
+    const procedureNames = procedures.map((procedure) => {
+      return procedure.name;
+    });
+    res.json(procedureNames);
+  });
+});
+
+app.patch("/api/procedure", authorization, (req, res) => {
+  if (!req.body.procedure) {
+    res.json([]);
+  } else if (req.body.action == "delete") {
+    deleteProcedure(req.body.procedure).then((procedures) => {
+      const procedureNames = procedures.map((procedure) => {
+        return procedure.name;
+      });
+      res.json(procedureNames);
+      const details = "נמחקה פעולה: " + req.body.procedure;
+      createAuditLog("נמחקה פעולה", details, req.body.idToken);
+    });
+  } else {
+    addProcedure(req.body.procedure).then((procedures) => {
+      const procedureNames = procedures.map((procedure) => {
+        return procedure.name;
+      });
+      res.json(procedureNames);
+      const details = "נוספה פעולה: " + req.body.procedure;
+      createAuditLog("נוספה פעולה", details, req.body.idToken);
+    });
+  }
+});
+
+app.post("/api/templates", authorization, async (req, res) => {
+  const allTemplatesAccess = await db
+    .collection("roles")
+    .findOne({ name: req.userRole })
+    .then((role) => {
+      if (role.createImportantDocs) {
+        console.log("user has high templates permissions");
+        return true;
+      }
+      console.log("user does NOT have high templates permissions");
+      return false;
+    });
+
+  getTemplateNames(allTemplatesAccess).then((templateNames) => {
+    res.json(templateNames);
+  });
 });
 
 // exports.app = functions.https.onRequest(app);

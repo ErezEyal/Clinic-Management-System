@@ -19,7 +19,7 @@ function Login(props) {
   const [verificationId, setVerificationId] = useState(null);
   const [resolver, setResolver] = useState(null);
   let history = useHistory();
-  const AUDIT_URL = "http://localhost:3000/api/audit";
+  const AUDIT_URL = process.env.REACT_APP_BASE_API_URL + "audit";
 
   const sendLoginLog = (user) => {
     const data = {

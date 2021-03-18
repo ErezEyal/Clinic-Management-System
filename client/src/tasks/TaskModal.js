@@ -406,6 +406,7 @@ function TaskModal(props) {
                   isRtl={true}
                   isSearchable={true}
                   options={patients}
+                  isDisabled={props.task.patientId}
                   onChange={handlePatientChange}
                 />
               </div>

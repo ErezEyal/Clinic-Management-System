@@ -41,3 +41,26 @@
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
+
+::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  /* box-shadow: inset 0 0 5px grey;  */
+  border-radius: 10px;
+
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(190, 193, 202, 0.753); 
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(169, 171, 179, 0.808); 
+}

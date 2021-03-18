@@ -4,12 +4,14 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import heLocale from "@fullcalendar/core/locales/he";
 import CalendarEventModal from "./CalendarEventModal";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 function Calendar(props) {
   const calendarRef = useRef();
-  const CALENDAR_EVENTS_URL = "http://localhost:3000/api/calendar-events";
-  const CALENDAR_EVENT_URL = "http://localhost:3000/api/event";
+  const CALENDAR_EVENTS_URL =
+    process.env.REACT_APP_BASE_API_URL + "calendar-events";
+  const CALENDAR_EVENT_URL = process.env.REACT_APP_BASE_API_URL + "event";
+  const PATIENTS_URL = process.env.REACT_APP_BASE_API_URL + "patients";
   const [displayEventModal, setDisplayEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [sizeSmall, setSizeSmall] = useState(true);
@@ -17,6 +19,32 @@ function Calendar(props) {
   const [displayMain, setDisplayMain] = useState(true);
   const [displaySecond, setDisplaySecond] = useState(true);
   const [displayThird, setDisplayThird] = useState(true);
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    if (!props.user) {
+      return;
+    }
+    props.user
+      .getIdToken(true)
+      .then((idToken) => {
+        props
+          .postRequestWithToken(PATIENTS_URL, idToken)
+          .then((data) => {
+            const patients = data.map((patient) => {
+              return {
+                value: patient._id,
+                label: `${patient.firstName} ${patient.lastName} (${patient.id})`,
+              };
+            });
+            setPatients(patients);
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
 
   useEffect(() => {
     if (!displayEventModal) {
@@ -46,9 +74,9 @@ function Calendar(props) {
       }
       const data = {
         start: new Date(
-          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 2)
+          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 1)
         ),
-        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 2)),
+        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         mainCalendar: true,
       };
       props.user
@@ -67,7 +95,7 @@ function Calendar(props) {
         })
         .catch((error) => console.log(error));
     },
-    [props, displayMain, displaySecond, displayThird]
+    [props, displayMain]
   );
 
   const getSecondCalendarEvents = useCallback(
@@ -84,9 +112,9 @@ function Calendar(props) {
       }
       const data = {
         start: new Date(
-          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 2)
+          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 1)
         ),
-        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 2)),
+        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         secondCalendar: true,
       };
       props.user
@@ -122,9 +150,9 @@ function Calendar(props) {
       }
       const data = {
         start: new Date(
-          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 2)
+          fetchInfo.start.setMonth(fetchInfo.start.getMonth() - 1)
         ),
-        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 2)),
+        end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         thirdCalendar: true,
       };
       props.user
@@ -150,6 +178,7 @@ function Calendar(props) {
     const data = {
       event: event,
       calendarName: calendarName,
+      userName: props.user.displayName,
     };
     props.user
       .getIdToken(true)
@@ -172,6 +201,7 @@ function Calendar(props) {
     const data = {
       event: event,
       calendarName: calendarName,
+      userName: props.user.displayName,
     };
     props.user
       .getIdToken(true)
@@ -212,7 +242,7 @@ function Calendar(props) {
       .catch((error) => console.log(error));
   };
 
-  const handleEventClick = (eventInfo) => {
+  const handleEventClick = useCallback((eventInfo) => {
     console.log(eventInfo.event);
     setDisplayEventModal(true);
     setSelectedEvent({
@@ -221,22 +251,129 @@ function Calendar(props) {
       title: eventInfo.event.title || "",
       details: eventInfo.event.extendedProps.description || "",
       calendar: eventInfo.event.extendedProps.calendarName,
+      patientId: eventInfo.event.extendedProps.patientId,
       id: eventInfo.event.id,
     });
-  };
+  }, []);
+
+  // const handleEventClick = (eventInfo) => {
+  //   console.log(eventInfo.event);
+  //   setDisplayEventModal(true);
+  //   setSelectedEvent({
+  //     start: eventInfo.event.startStr,
+  //     end: eventInfo.event.endStr,
+  //     title: eventInfo.event.title || "",
+  //     details: eventInfo.event.extendedProps.description || "",
+  //     calendar: eventInfo.event.extendedProps.calendarName,
+  //     patientId: eventInfo.event.extendedProps.patientId,
+  //     id: eventInfo.event.id,
+  //   });
+  // };
 
   const fetchEvents = () => {
     let calendarApi = calendarRef.current.getApi();
     calendarApi.refetchEvents();
   };
 
-  const showEventModal = () => {
+  const showEventModal = useCallback(() => {
     setDisplayEventModal(true);
-  };
+  }, []);
 
   const hideEventModal = () => {
     setDisplayEventModal(false);
   };
+
+  const calendar = useMemo(
+    () => (
+      <FullCalendar
+        plugins={[dayGridPlugin, listPlugin, timeGridPlugin]}
+        eventTimeFormat={{
+          hour: "2-digit",
+          minute: "2-digit",
+          meridiem: false,
+        }}
+        initialView="monthList"
+        locale={heLocale}
+        fixedWeekCount={false}
+        height={props.maxHeight}
+        eventSources={[
+          {
+            events: getMainCalendarEvents,
+          },
+          {
+            events: getSecondCalendarEvents,
+            color: "#b74242f5",
+          },
+          {
+            events: getThirdCalendarEvents,
+            color: "#629c62",
+          },
+        ]}
+        headerToolbar={{
+          start:
+            sizeSmall &&
+            props.role &&
+            (props.role.addCalendarEvents ||
+              props.role.addSecondCalendarEvents ||
+              props.role.addThirdCalendarEvents ||
+              props.role.admin)
+              ? "createEventButton"
+              : !sizeSmall
+              ? "dayGridMonth,monthList,dayGridDay"
+              : "title",
+          center:
+            sizeSmall &&
+            props.role &&
+            !props.role.addCalendarEvents &&
+            !props.role.addSecondCalendarEvents &&
+            !props.role.addThirdCalendarEvents &&
+            !props.role.admin
+              ? ""
+              : "title",
+          end: sizeSmall
+            ? "today prev,next"
+            : props.role &&
+              (props.role.addCalendarEvents ||
+                props.role.addSecondCalendarEvents ||
+                props.role.addThirdCalendarEvents ||
+                props.role.admin)
+            ? "createEventButton today prev,next"
+            : "today prev,next",
+        }}
+        dayMaxEvents={3}
+        views={{
+          dayGridDay: {
+            dayMaxEvents: false,
+          },
+          month: {
+            timeFormat: "h:mm",
+          },
+          monthList: {
+            type: "list",
+            duration: { days: 31 },
+            buttonText: "לוח זמנים",
+          },
+        }}
+        navLinks={false}
+        ref={calendarRef}
+        eventClick={handleEventClick}
+        customButtons={{
+          createEventButton: {
+            text: "צור אירוע",
+            click: showEventModal,
+          },
+        }}
+        buttonText={{
+          listWeek: "שבוע",
+        }}
+      />
+    ),
+    [props.maxHeight, props.role, showEventModal, sizeSmall]
+  );
+
+  // const calendar = useCallback(() => {
+  //   return <span>hello</span>
+  // })
 
   return (
     <>
@@ -254,6 +391,8 @@ function Calendar(props) {
           updateEvent={handleEventUpdate}
           deleteEvent={handleEventDeletion}
           role={props.role}
+          patients={patients}
+          patient={props.patient}
         />
         <div className="d-lg-flex mb-3">
           <span>
@@ -308,7 +447,8 @@ function Calendar(props) {
             <span className="mr-2">יומן שלישי </span>
           </div>
         </div>
-        <FullCalendar
+        {calendar}
+        {/* <FullCalendar
           plugins={[dayGridPlugin, listPlugin, timeGridPlugin]}
           eventTimeFormat={{
             hour: "2-digit",
@@ -389,7 +529,7 @@ function Calendar(props) {
           buttonText={{
             listWeek: "שבוע",
           }}
-        />
+        /> */}
       </div>
     </>
   );

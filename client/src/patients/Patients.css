@@ -60,15 +60,24 @@ button.active-tab {
 
 .patientsTable td, .usersTable td{
   padding: 0.6rem;
-  border-top: 1px solid #dee2e6;
+  /* border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6; */
 }
 .patientsTable th, .usersTable th {
   padding: 0.6rem;
   border-bottom: 2px solid #dee2e6;
 }
 
-.patientsTableRow:hover, .usersTableRow:hover {
-  background-color: #F5F8FA;
+.patientsTableRow {
+  background-color: white;
+}
+
+.patientsTableRow:hover {
+  background-color:rgb(245, 245, 245);
+}
+
+.usersTableRow:hover {
+  background-color:#F8F9FA;
 }
 
 .patientSearch, .userSearch {
@@ -88,12 +97,31 @@ button.active-tab {
 
 .patientModalInput:hover {
   border-color: blue;
-  
 }
+
 .normalInputSize {
   width: 15rem
 }
 
 .normalLabelWidth {
   width: 8rem;
+}
+
+.sticky-col {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+@media (max-width: 600px) { 
+  .firstCol {
+    width: 12rem !important;
+  }
+}
+
+.patientsHeaderCell:hover {
+  background-color: rgb(245, 245, 245) !important;
+}
+
+.firstColCells:hover {
+  background-color: rgb(235, 234, 234) !important;
 }

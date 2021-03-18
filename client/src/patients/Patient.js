@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import "./Patients.css";
 import PatientNavBar from "./PatientNavBar";
@@ -12,14 +12,17 @@ import Templates from "./Templates";
 
 function Patient(props) {
   const [activeTab, setActiveTab] = useState("timeline");
-  const [patientFiles, setPatientFiles] = useState([]);
-  const [patientPhotos, setPatientPhotos] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [patientFiles, setPatientFiles] = useState(null);
+  const [patientPhotos, setPatientPhotos] = useState(null);
   const [displayPatientModal, setDisplayPatientModal] = useState(false);
-  const [templates, setTemplates] = useState(null);
-  const PATIENT_FILES_URL = "http://localhost:3000/api/patient-files";
-  const PATIENT_FILE_URL = "http://localhost:3000/api/patient-file";
-  const PATIENT_PHOTOS_URL = "http://localhost:3000/api/patient-photos";
-  const TIMELINE_URL = "http://localhost:3000/api/timeline";
+  const TEMPLATES_URL = process.env.REACT_APP_BASE_API_URL + "templates";
+  const PATIENT_FILES_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-files";
+  const PATIENT_FILE_URL = process.env.REACT_APP_BASE_API_URL + "patient-file";
+  const PATIENT_PHOTOS_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-photos";
+  const TIMELINE_URL = process.env.REACT_APP_BASE_API_URL + "timeline";
   const [timeline, setTimeline] = useState([]);
 
   const changeTab = (tab) => {
@@ -41,7 +44,24 @@ function Patient(props) {
         })
         .catch((error) => console.log(error));
     }
-  }, [props]);
+  }, [PATIENT_FILES_URL, props]);
+
+  useEffect(() => {
+    if (props.patient) {
+      props.user
+        .getIdToken(true)
+        .then((idToken) => {
+          props
+            .postRequestWithToken(TEMPLATES_URL, idToken)
+            .then((result) => {
+              console.log("Templates:", result);
+              setTemplates(result);
+            })
+            .catch((err) => console.log(err));
+        })
+        .catch((error) => console.log(error));
+    }
+  }, [TEMPLATES_URL, props]);
 
   useEffect(() => {
     if (props.patient) {
@@ -61,7 +81,7 @@ function Patient(props) {
         })
         .catch((error) => console.log(error));
     }
-  }, [props]);
+  }, [props, activeTab]);
 
   useEffect(() => {
     if (props.patient) {
@@ -79,6 +99,29 @@ function Patient(props) {
         .catch((error) => console.log(error));
     }
   }, [props]);
+
+  const getUpdatedPatientDetails = useCallback(() => {
+    if (timeline.length) {
+      let procedures = [];
+      for (const day of timeline) {
+        for (const patientEvent of day[Object.keys(day)[0]]) {
+          if (
+            patientEvent.template === "פעולה" &&
+            !procedures.includes(patientEvent.title)
+          ) {
+            procedures.push(patientEvent.title);
+          }
+        }
+      }
+      const updatedPatient = { ...props.patient };
+      updatedPatient.procedures = procedures;
+      // console.log(updatedPatient);
+      return updatedPatient;
+    }
+    return props.patient;
+  }, [timeline, props.patient]);
+
+  if (!props.patient) return <Redirect to="/" />;
 
   const showPatientModal = () => {
     setDisplayPatientModal(true);
@@ -172,10 +215,6 @@ function Patient(props) {
     }
   };
 
-  
-
-  if (!props.patient) return <Redirect to="/" />;
-
   return (
     <>
       <PatientModal
@@ -184,6 +223,8 @@ function Patient(props) {
         patient={props.patient}
         updatePatient={props.savePatient}
         categories={props.categories}
+        procedures={props.procedures}
+        role={props.role}
       />
       <Container fluid className="d-flex p-4 text-right">
         <div
@@ -192,9 +233,10 @@ function Patient(props) {
         >
           <div className="position-sticky" style={{ top: "4rem" }}>
             <PatientProfile
-              patient={props.patient}
+              patient={getUpdatedPatientDetails()}
               editPatient={showPatientModal}
               categories={props.categories}
+              role={props.role}
             />
           </div>
         </div>
@@ -214,12 +256,18 @@ function Patient(props) {
                 maxHeight="75vh"
                 small={true}
                 role={props.role}
+                patient={{
+                  label: `${props.patient.firstName} ${props.patient.lastName} (${props.patient.id})`,
+                  value: props.patient._id,
+                }}
               />
             </div>
           ) : activeTab === "info" ? (
             <PatientProfile
               patient={props.patient}
               editPatient={showPatientModal}
+              categories={props.categories}
+              role={props.role}
             />
           ) : activeTab === "documents" ? (
             <DocumentsList
@@ -245,6 +293,7 @@ function Patient(props) {
               patchRequestWithToken={props.patchRequestWithToken}
               deleteRequestWithToken={props.deleteRequestWithToken}
               fetchTimeline={fetchTimeline}
+              procedures={props.procedures}
             />
           ) : activeTab === "templates" ? (
             <Templates
@@ -252,6 +301,7 @@ function Patient(props) {
               postRequestWithToken={props.postRequestWithToken}
               user={props.user}
               docCreated={handleDocCreated}
+              templates={templates}
             />
           ) : (
             ""

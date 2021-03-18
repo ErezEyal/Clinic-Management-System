@@ -37,61 +37,49 @@ function DocumentsList(props) {
     // },100)
   };
 
-  const filesList = props.files.flatMap((file, index) => {
-    const fileName = file.path.substring(file.path.lastIndexOf("/") + 1);
-    // let isImage = false;
-    // for (const ext of imageExtensions) {
-    //   if (props.photos) {
-    //     if (fileName.includes(ext)) {
-    //       isImage = true;
-    //       break;
-    //     }
-    //   } else if (props.photos === false) {
-    //     if (fileName.includes(ext)) {
-    //       return [];
-    //     }
-    //   }
-    // }
+  const filesList = props.files
+    ? props.files.flatMap((file, index) => {
+        const fileName = file.path.substring(file.path.lastIndexOf("/") + 1);
+        // console.log(fileName)
+        if (!file.path.includes(filter)) {
+          return [];
+        }
 
-    // if (!isImage && props.photos) {
-    //   return [];
-    // }
-    if (!file.path.includes(filter)) {
-      return [];
-    }
-
-    return [
-      <li className="py-2 coloredList patientNav" key={index}>
-        <a
-          href={file.link}
-          target="_blank"
-          className={"text-decoration-none" + (file.link ? "" : " text-dark")}
-          title={file.path.substring(1)}
-        >
-          <span>
-            {fileName.length && fileName.length > 50
-              ? fileName.substring(0, 50) + "..."
-              : fileName}
-          </span>
-        </a>
-        {file.link ? (
-          <span
-            className="mr-2 fontSmall text-secondary pointer d-none d-lg-inline"
-            onClick={() => showPhoto(file.link)}
-          >
-            הצג
-          </span>
-        ) : (
-          <span
-            className="mr-2 fontSmall text-secondary pointer"
-            onClick={() => fetchAndLoadLink(file.path)}
-          >
-            טען
-          </span>
-        )}
-      </li>,
-    ];
-  });
+        return [
+          <li className="py-2 coloredList patientNav" key={index}>
+            <a
+              href={file.link}
+              target="_blank"
+              className={
+                "text-decoration-none" + (file.link ? "" : " text-dark")
+              }
+              title={file.path.substring(1)}
+            >
+              <span>
+                {fileName.length && fileName.length > 50
+                  ? fileName.substring(0, 50) + "..."
+                  : fileName}
+              </span>
+            </a>
+            {file.link ? (
+              <span
+                className="mr-2 fontSmall text-secondary pointer d-none d-lg-inline"
+                onClick={() => showPhoto(file.link)}
+              >
+                הצג
+              </span>
+            ) : (
+              <span
+                className="mr-2 fontSmall text-secondary pointer"
+                onClick={() => fetchAndLoadLink(file.path)}
+              >
+                טען
+              </span>
+            )}
+          </li>,
+        ];
+      })
+    : [];
 
   const showPhoto = (url) => {
     preview.loadPhoto(url);
@@ -119,7 +107,7 @@ function DocumentsList(props) {
 
   return (
     <>
-      {!props.files.length ? (
+      {!props.files ? (
         <Loading />
       ) : (
         <>

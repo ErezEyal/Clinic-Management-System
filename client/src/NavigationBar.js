@@ -11,7 +11,7 @@ import { useEffect } from "react";
 
 function NavigationBar(props) {
   let history = useHistory();
-  const AUDIT_URL = "http://localhost:3000/api/audit";
+  const AUDIT_URL = process.env.REACT_APP_BASE_API_URL + "audit";
 
   const sendLogoutLog = (user) => {
     const data = {
@@ -101,7 +101,7 @@ function NavigationBar(props) {
                 !props.role || (!props.role.manageUsers && !props.role.admin)
               }
             >
-              ניהול משתמשים
+              משתמשים
             </NavDropdown.Item>
             <NavDropdown.Item
               href="/roles"
@@ -131,7 +131,7 @@ function NavigationBar(props) {
                 src={props.userPhoto ? props.userPhoto : "/unknown.png"}
               />
               <NavDropdown
-                title={props.user.displayName + " "}
+                title={props.role ? props.user.displayName + ", " + props.role.name + " " : " "}
                 className="userSectionNavBar"
               >
                 <NavDropdown.Item className="text-right" href="#action/3.1">

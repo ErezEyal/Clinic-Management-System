@@ -187,15 +187,13 @@ function Task(props) {
   };
 
   const nextDueDate = (dueDate) => {
-      if (!dueDate) return "";
+    if (!dueDate) return "";
     if (new Date(Date.now()).setHours(0, 0, 0, 0) > dueDate) {
-        return ""
-    }
-    else {
-        const timeLeft = dueDate - new Date(Date.now()).setHours(23, 59, 59, 0); 
-        const days = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
-        console.log("נותרו " + days + " ימים")
-        return "נותרו " + days + " ימים"
+      return "";
+    } else {
+      const timeLeft = dueDate - new Date(Date.now()).setHours(23, 59, 59, 0);
+      const days = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+      return "נותרו " + days + " ימים";
     }
   };
 
@@ -221,7 +219,7 @@ function Task(props) {
               <p>{props.details.title}</p>
             </div>
             <div hidden={!isLate()} className="flex-shrink-0 pr-1">
-              <span className="text-white bg-lightRed fontSmall rounded py-1">
+              <span className="text-white bg-lightRed fontSmall rounded py-1" hidden={props.details.closedAt}>
                 <span className="mx-1">{clockIcon}</span>
                 <span className="mr-1 ml-2">באיחור</span>
               </span>
@@ -252,6 +250,7 @@ function Task(props) {
               className="ml-2 rounded-circle"
               src={photo.photo}
               width="30"
+              height="30"
               title={photo.name}
             ></img>
           );
@@ -260,7 +259,7 @@ function Task(props) {
           className="position-absolute float-left text-muted fontSmall"
           style={{ bottom: 0, left: 0 }}
         >
-          {nextDueDate(props.details.dueDate)}
+          {!props.details.closedAt ? nextDueDate(props.details.dueDate) : ""}
         </span>
       </div>
     </div>

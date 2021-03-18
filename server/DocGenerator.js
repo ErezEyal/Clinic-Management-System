@@ -42,8 +42,8 @@ const listTags = (fileName) => {
     console.log(tags);
 }
 
-const createDoc = (fileName, params) => {
-    const content = fs.readFileSync(path.resolve(__dirname, fileName), 'binary');
+const createDoc = (content, params) => {
+    // const content = fs.readFileSync(path.resolve(__dirname, fileName), 'binary');
     const zip = new PizZip(content);
     let doc;
     try {

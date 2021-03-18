@@ -10,8 +10,8 @@ function Roles(props) {
   const [searchFocus, setSearchFocus] = useState(false);
   const [filter, setFilter] = useState("");
   const [editRole, setEditRole] = useState(-1);
-  const ROLES_URL = "http://localhost:3000/api/roles";
-  const ROLE_URL = "http://localhost:3000/api/role";
+  const ROLES_URL = process.env.REACT_APP_BASE_API_URL + "roles";
+  const ROLE_URL = process.env.REACT_APP_BASE_API_URL + "role";
 
   const permissions = [
     "manageUsers",
@@ -28,6 +28,7 @@ function Roles(props) {
     "viewDocuments",
     "viewPhotos",
     "createDocs",
+    "createImportantDocs",
   ];
 
   const searchIcon = (
@@ -168,7 +169,12 @@ function Roles(props) {
       // this func should not handle filtering
       return (
         <tr key={index} className="rolesTableRow" style={{ color: "#007A8C" }}>
-          <td className="pr-lg-4">{getRoleNameInputTag(role)}</td>
+          <td
+            className="pr-lg-4 sticky-col bg-white overflow-hidden"
+            style={{ right: "0px", zIndex: 2000 }}
+          >
+            {getRoleNameInputTag(role)}
+          </td>
           {permissions.map((permission) => {
             return (
               <td key={index + permission}>
@@ -218,28 +224,60 @@ function Roles(props) {
       <thead key="1">
         <tr style={{ backgroundColor: "#F5F8FA" }}>
           <th
-            className="pr-lg-4 border font-weight-normal"
-            style={{ width: "7rem" }}
+            className="pr-lg-4 border font-weight-normal sticky-col"
+            style={{ width: "7rem", right: "0px", backgroundColor: "#F5F8FA" }}
           >
             תפקיד
           </th>
           <th className="border font-weight-normal" style={{ width: "7rem" }}>
             ניהול משתמשים
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה בלוגים</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>עדכון פרטי לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>מחיקת רשומת לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>הוספת רשומת לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה ביומן ראשי</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה ביומן ניתוחים</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה ביומן שלישי</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>עריכת יומן ראשי</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>עריכת יומן ניתוחים</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>עריכת יומן שלישי</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה במסמכי לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>צפייה בתמונות לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>יצירת מסמכי לקוח</th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}></th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה בלוגים
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            עדכון פרטי לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            מחיקת רשומת לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            הוספת רשומת לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה ביומן ראשי
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה ביומן ניתוחים
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה ביומן שלישי
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            עריכת יומן ראשי
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            עריכת יומן ניתוחים
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            עריכת יומן שלישי
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה במסמכי לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            צפייה בתמונות לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            יצירת מסמכי לקוח
+          </th>
+          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+            יצירת מסמכי לקוח מסווגים
+          </th>
+          <th
+            className="border font-weight-normal"
+            style={{ width: "7rem" }}
+          ></th>
         </tr>
       </thead>,
       <tbody key="2">{tableRows}</tbody>,

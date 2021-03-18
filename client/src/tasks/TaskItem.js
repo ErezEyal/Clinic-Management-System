@@ -180,6 +180,7 @@ function TaskItem(props) {
                         className="pointer mx-1 rounded-circle"
                         src={getUserPhoto() ? getUserPhoto() : "/unknownBig.png"}
                         width="25"
+                        height="25"
                         title={getUserName()}
                         alt="user"
                     ></img>

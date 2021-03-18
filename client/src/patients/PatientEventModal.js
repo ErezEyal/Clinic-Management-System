@@ -166,9 +166,6 @@ function PatientEventModal(props) {
     } else if (e.target.innerText === "סיכום פגישה") {
       if (!title) setTitle("סיכום פגישת לקוח");
       if (!details) setDetails("פרטי הפגישה: ");
-    } else if (e.target.innerText === "זימון פגישה") {
-      if (!title) setTitle("נקבעה פגישה עם הלקוח");
-      if (!details) setDetails("הפגישה נקבעה לתאריך: ");
     } else if (e.target.innerText === "אחר") {
       if (!title) setTitle("");
       if (!details) setDetails("");
@@ -191,11 +188,12 @@ function PatientEventModal(props) {
               className="btn dropdown-toggle p-0 shadow-none"
               type="button"
               data-toggle="dropdown"
+              disabled={template === "פגישה" || template === "מטלה"}
             >
               <span className="px-1">{template || "בחר סוג אירוע"}</span>
             </button>
             <div className="dropdown-menu dropdown-menu-right text-right">
-              {["שיחה עם לקוח", "סיכום פגישה", "זימון פגישה", "אחר"].map(
+              {["פעולה", "שיחה עם לקוח", "סיכום פגישה", "אחר"].map(
                 (event, index) => {
                   return (
                     <button
@@ -227,13 +225,42 @@ function PatientEventModal(props) {
           </div>
           <div className="modalTextPadding pl-3">
             <textarea
+              hidden={template === "פעולה"}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               rows={1}
               className="eventTitle border-top-0 border-left-0 border-right-0 bg-transparent overflow-hidden shadow-none w-100"
               style={{ fontWeight: "500", resize: "none", outline: "none" }}
               placeholder="הוסף כותרת"
+              disabled={template === "פגישה" || template === "מטלה"}
             ></textarea>
+            <div className="dropdown">
+              <button
+                className="btn dropdown-toggle p-0 shadow-none"
+                type="button"
+                data-toggle="dropdown"
+                hidden={template !== "פעולה"}
+                disabled={template === "פגישה" || template === "מטלה"}
+              >
+                <span className="px-1">{title || "בחר פעולה"}</span>
+              </button>
+              <div
+                className="dropdown-menu dropdown-menu-right text-right"
+                hidden={template !== "פעולה"}
+              >
+                {props.procedures.map((event, index) => {
+                  return (
+                    <button
+                      key={index}
+                      className={"dropdown-item"}
+                      onClick={(e) => setTitle(e.target.innerText)}
+                    >
+                      {event}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div name="eventDescription" className="mb-4">
@@ -251,6 +278,7 @@ function PatientEventModal(props) {
                 className="outline-none rounded border-0 w-100"
                 style={{ backgroundColor: "#f0f0f0", fontSize: "0.9rem" }}
                 placeholder="הוסף תיאור"
+                disabled={template === "פגישה" || template === "מטלה"}
               ></textarea>
             </div>
           </div>
@@ -268,6 +296,7 @@ function PatientEventModal(props) {
                 timeIntervals={15}
                 timeFormat="HH:mm"
                 timeCaption="זמן"
+                disabled={template === "פגישה" || template === "מטלה"}
                 dateFormat="eeee, LLLL d , k:mm"
                 popperModifiers={{
                   preventOverflow: {
@@ -293,7 +322,9 @@ function PatientEventModal(props) {
               צור אירוע
             </button>
             <button
-              hidden={!props.event}
+              hidden={
+                !props.event || template === "פגישה" || template === "מטלה"
+              }
               className="btn btn-primary text-white"
               onClick={updateEvent}
             >

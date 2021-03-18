@@ -15,9 +15,9 @@ function Signup(props) {
     const [registered, setRegistered] = useState(false);
     const [isMfa, setIsMfa] = useState(true);
     const [roles, setRoles] = useState([]);
-    const SIGNUP_URL = "http://localhost:3000/signup";
-    const AUDIT_URL = "http://localhost:3000/api/audit";
-    const ROLES_URL = "http://localhost:3000/api/roles";
+    const SIGNUP_URL = process.env.REACT_APP_BASE_URL + "signup";
+    const AUDIT_URL = process.env.REACT_APP_BASE_API_URL + "audit";
+    const ROLES_URL = process.env.REACT_APP_BASE_API_URL + "roles";
     let history = useHistory();
 
     const handleSignUp = (event) => {
@@ -81,6 +81,8 @@ function Signup(props) {
                 .catch(err => {
                     console.log(err);
                     setSignUpError("ההרשמה נכשלה");
+                    console.log(SIGNUP_URL)
+                    console.log(ROLES_URL)
                 })
         }).catch(error => {
             console.log(error);

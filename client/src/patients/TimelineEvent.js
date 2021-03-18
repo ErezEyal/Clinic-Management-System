@@ -76,6 +76,20 @@ function TimelineEvent(props) {
     </svg>
   );
 
+  const eventIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      className="bi bi-calendar3"
+      viewBox="0 0 16 16"
+    >
+      <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z" />
+      <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+    </svg>
+  );
+
   const handleDeleteEvent = () => {
     props.deleteEvent(props.details._id);
   };
@@ -83,6 +97,20 @@ function TimelineEvent(props) {
   const handleEditEvent = () => {
     props.editEvent(props.details);
   };
+
+  const boardIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      className="bi bi-clipboard"
+      viewBox="0 0 16 16"
+    >
+      <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+      <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+    </svg>
+  );
 
   return (
     <>
@@ -112,17 +140,30 @@ function TimelineEvent(props) {
               {editIcon}
             </span>
             <h5>
+              <span className="ml-2" hidden={props.details.template !== "מטלה"}>
+                {checkIcon}
+              </span>
               <span
                 className="ml-2"
-                hidden={
-                  props.details.template !== "מטלה"
-                }
+                hidden={props.details.template !== "פגישה"}
               >
-                {checkIcon}
+                {eventIcon}
+              </span>
+              <span
+                className="ml-2"
+                hidden={props.details.template !== "פעולה"}
+              >
+                {boardIcon}
               </span>
               <span>{props.details.title}</span>
             </h5>
-            <p className="text-secondary">{props.details.description}</p>
+            <p className="text-secondary" style={{ whiteSpace: "pre-wrap" }}>
+              {props.details.description.length > 100
+                ? props.details.description
+                    .replaceAll("\n", "\t")
+                    .substring(0, 100) + "..."
+                : props.details.description.replaceAll("\n", "\t")}
+            </p>
           </div>
         </div>
         <div></div>

@@ -7,10 +7,13 @@ function Timeline(props) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [meetingSummaryFilter, setMeetingSummaryFilter] = useState(true);
   const [patientCallFilter, setPatientCallFilter] = useState(true);
+  const [procedureFilter, setProcedureFilter] = useState(true);
   const [meetingScheduleFilter, setMeetingScheduleFilter] = useState(true);
   const [otherFilter, setOtherFilter] = useState(true);
   const [taskFilter, setTaskFilter] = useState(true);
-  const PATIENT_EVENT_URL = "http://localhost:3000/api/patient-event";
+  const [displayFilters, setDisplayFilters] = useState(false);
+  const PATIENT_EVENT_URL =
+    process.env.REACT_APP_BASE_API_URL + "patient-event";
 
   useEffect(() => {
     if (!displayEventModal) {
@@ -100,17 +103,21 @@ function Timeline(props) {
       const dayString = Object.keys(day)[0];
       // const daySpanTag = <span className="text-info">{dayString}</span>
       const events = day[dayString].flatMap((event, index) => {
-        console.log("even", event);
-        // check filters and return empty when relevant
+        // console.log("event", event);
         if (event.template === "שיחה עם לקוח" && !patientCallFilter) {
           return [];
         } else if (event.template === "סיכום פגישה" && !meetingSummaryFilter) {
           return [];
-        } else if (event.template === "זימון פגישה" && !meetingScheduleFilter) {
+        } else if (event.template === "פעולה" && !procedureFilter) {
+          return [];
+        } else if (event.template === "פגישה" && !meetingScheduleFilter) {
           return [];
         } else if (event.template === "מטלה" && !taskFilter) {
           return [];
-        } else if (event.template === "אחר" && !otherFilter) {
+        } else if (
+          (event.template === "אחר" || !event.template) &&
+          !otherFilter
+        ) {
           return [];
         } else
           return [
@@ -141,19 +148,25 @@ function Timeline(props) {
         hide={hideEventModal}
         event={selectedEvent}
         patient={props.patient}
+        procedures={props.procedures}
         currentUserName={props.user.displayName}
         createEvent={handleEventCreation}
         updateEvent={handleEventUpdate}
         deleteEvent={handleEventDeletion}
       />
-      <div className="d-flex my-2">
+      <div className="d-flex mt-2 mb-4">
         <div name="filter" className="flex-grow-1 text-muted d-lg-flex">
-          <div>
+          <div className="mb-3 mb-md-0 ">
             <span>
-              <b>סינון: </b>
+              <button
+                className="btn text-muted btn-light border py-0 ml-2"
+                onClick={() => setDisplayFilters(!displayFilters)}
+              >
+                <b>סינון</b>
+              </button>
             </span>
           </div>
-          <div className="mx-2 my-1 my-lg-0">
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
               type="checkbox"
               checked={meetingSummaryFilter}
@@ -161,7 +174,15 @@ function Timeline(props) {
             ></input>
             <span className="mr-2">סיכום פגישה </span>
           </div>
-          <div className="mx-2 my-1 my-lg-0">
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+            <input
+              type="checkbox"
+              checked={procedureFilter}
+              onChange={() => setProcedureFilter(!procedureFilter)}
+            ></input>
+            <span className="mr-2">פעולות </span>
+          </div>
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
               type="checkbox"
               checked={patientCallFilter}
@@ -169,15 +190,15 @@ function Timeline(props) {
             ></input>
             <span className="mr-2">שיחה עם לקוח </span>
           </div>
-          <div className="mx-2 my-1 my-lg-0">
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
               type="checkbox"
               checked={meetingScheduleFilter}
               onChange={() => setMeetingScheduleFilter(!meetingScheduleFilter)}
             ></input>
-            <span className="mr-2">זימון פגישה </span>
+            <span className="mr-2">פגישה </span>
           </div>
-          <div className="mx-2 my-1 my-lg-0">
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
               type="checkbox"
               checked={taskFilter}
@@ -185,7 +206,7 @@ function Timeline(props) {
             ></input>
             <span className="mr-2">מטלה </span>
           </div>
-          <div className="mx-2 my-1 my-lg-0">
+          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
               type="checkbox"
               checked={otherFilter}
@@ -195,8 +216,8 @@ function Timeline(props) {
           </div>
         </div>
         <div className="flex-shrink-0">
-          <button className="btn btn-outline-info" onClick={showEventModal}>
-            +
+          <button className="btn btn-outline-info py-0 px-2 ml-2" onClick={showEventModal}>
+            הוסף 
           </button>
         </div>
       </div>

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Modal } from "react-bootstrap";
 import DatePicker, { registerLocale } from "react-datepicker";
 import he from "date-fns/locale/he";
+import Select from "react-select";
+
 registerLocale("he", he);
 
 function CalendarEventModal(props) {
@@ -12,6 +14,8 @@ function CalendarEventModal(props) {
   const [details, setDetails] = useState("");
   const [calendar, setCalendar] = useState("");
   const [eventId, setEventId] = useState(null);
+  const [patient, setPatient] = useState("");
+  const [patientEvent, setPatientEvent] = useState(false);
 
   const successMessage = (
     <span className="text-success">אירוע נשמר בהצלחה</span>
@@ -50,6 +54,23 @@ function CalendarEventModal(props) {
             : "",
       });
       setEventId(props.event.id);
+      const patientObject = props.patients.find(
+        (patient) => patient.value === props.event.patientId
+      );
+      setPatient(
+        (!props.event && props.patient) ||
+          patientObject ||
+          (props.event &&
+            props.event.patientId &&
+            !patientObject && {
+              label: props.event.patientId,
+              value: props.event.patientId,
+            }) ||
+          undefined
+      );
+      setPatientEvent(
+        (!props.event && props.patient) || props.event.patientId ? true : false
+      );
     } else {
       setStartTime(new Date());
       setEndTime(null);
@@ -58,6 +79,8 @@ function CalendarEventModal(props) {
       setDetails("");
       setCalendar("");
       setEventId(null);
+      setPatient(props.patient || props.patients[0] || "");
+      setPatientEvent(props.patient);
     }
   }, [props]);
 
@@ -85,6 +108,7 @@ function CalendarEventModal(props) {
     else if (!fullDay && startTime >= endTime)
       alert("מועד סיום צריך להיות אחרי מועד ההתחלה");
     else {
+      const patientId = patient && patient.value && patientEvent ? patient.value : "";
       const eventObject = {
         summary: title,
         start: {},
@@ -92,6 +116,11 @@ function CalendarEventModal(props) {
           timeZone: "UTC",
         },
         description: details,
+        extendedProperties: {
+          private: {
+            patientId: patientId,
+          },
+        },
       };
       if (fullDay) {
         const endDate = new Date(endTime).setDate(endTime.getDate() + 1);
@@ -120,6 +149,7 @@ function CalendarEventModal(props) {
     else if (!fullDay && startTime >= endTime)
       alert("מועד סיום צריך להיות אחרי מועד ההתחלה");
     else {
+      const patientId = patient && patient.value && patientEvent ? patient.value : "";
       const eventObject = {
         summary: title,
         start: {
@@ -132,6 +162,11 @@ function CalendarEventModal(props) {
           timeZone: "UTC",
         },
         description: details,
+        extendedProperties: {
+          private: {
+            patientId: patientId,
+          },
+        },
         id: eventId,
       };
       if (fullDay) {
@@ -257,6 +292,13 @@ function CalendarEventModal(props) {
     </svg>
   );
 
+  const handlePatientChange = (e) => {
+    setPatient({
+      label: e.label,
+      value: e.value,
+    });
+  };
+
   return (
     <Modal onHide={props.hide} show={props.show} className="text-right">
       <div
@@ -363,6 +405,45 @@ function CalendarEventModal(props) {
               ></textarea>
             </div>
           </div>
+
+          <div name="patient" className="my-4">
+            <div className="my-2">
+              <span className="d-inline-block modalIconWidth">{labelIcon}</span>
+              <h6 className="d-inline-block">לקוח</h6>
+              <div class="custom-control custom-switch d-inline mr-2">
+                <input
+                  type="checkbox"
+                  class="custom-control-input shadow-none"
+                  id="patientSwitch"
+                  checked={patientEvent}
+                  disabled={
+                    (!props.event && props.patient) ||
+                    (props.event && props.event.patientId)
+                  }
+                  onChange={() => setPatientEvent(!patientEvent)}
+                />
+                <label class="custom-control-label" for="patientSwitch"></label>
+              </div>
+            </div>
+            <div className="modalTextPadding" hidden={!patientEvent}>
+              <div style={{ width: "17rem" }}>
+                <Select
+                  placeholder="בחר..."
+                  className="basic-single "
+                  value={patient || null}
+                  isRtl={true}
+                  isSearchable={true}
+                  isDisabled={
+                    (!props.event && props.patient) ||
+                    (props.event && props.event.patientId)
+                  }
+                  options={props.patients}
+                  onChange={handlePatientChange}
+                />
+              </div>
+            </div>
+          </div>
+
           <div name="calendarID" className="my-2">
             <div className="my-2">
               <span className="d-inline-block modalIconWidth">{labelIcon}</span>
@@ -384,12 +465,14 @@ function CalendarEventModal(props) {
                   {props.role &&
                     calendars.flatMap((cal, index) => {
                       if (
-                        (cal.name === "main" && !props.role.addCalendarEvents) ||
+                        (cal.name === "main" &&
+                          !props.role.addCalendarEvents) ||
                         (cal.name === "second" &&
                           !props.role.addSecondCalendarEvents) ||
-                        (cal.name === "third" && !props.role.addThirdCalendarEvents)
+                        (cal.name === "third" &&
+                          !props.role.addThirdCalendarEvents)
                       ) {
-                        return []
+                        return [];
                       }
                       return [
                         <button
