@@ -14,11 +14,15 @@ const calendarApi = require("./calendarApi.js");
 const Dropbox = require("dropbox").Dropbox;
 const { createDoc } = require("./DocGenerator");
 const groupBy = require("lodash.groupby");
-// const functions = require("firebase-functions");
 
 // app.use(express.static(path.join(__dirname, 'build')));
 
-const wordPluginKey = "2021ClinicWordPlugin2021";
+if (process.argv.length > 2 && process.argv[2] === "prod") {
+  console.log("# Production #");
+  app.use(express.static(path.join(__dirname, "build")));
+}
+
+// const wordPluginKey = "2021ClinicWordPlugin2021";
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -1059,8 +1063,15 @@ const changeUserRole = async (uid, newClaim) => {
     });
 };
 
-const createDocFromTemplate = async (fields, templateName, templateContent, patient) => {
-  const fileName = `${patient.firstName} ${patient.lastName} - ${patient.id || patient.passport} - ${templateName}`
+const createDocFromTemplate = async (
+  fields,
+  templateName,
+  templateContent,
+  patient
+) => {
+  const fileName = `${patient.firstName} ${patient.lastName} - ${
+    patient.id || patient.passport
+  } - ${templateName}`;
   const newFilePath = "/מסמכים חדשים/" + fileName;
   const doc = await createDoc(templateContent, fields);
   const dPFileLowerPath = await uploadFileToDropboxFolder(newFilePath, doc);
@@ -1229,8 +1240,11 @@ const createPatientDPFolder = (patient) => {
 };
 
 app.get("/*", (req, res) => {
-  res.send("OK");
-  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  if (process.argv.length > 2 && process.argv[2] === "prod") {
+    res.sendFile(path.join(__dirname, "build", "index.html"));
+  } else {
+    res.send("OK");
+  }
 });
 
 app.post("/api/patients", authorization, (req, res) => {
