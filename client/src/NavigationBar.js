@@ -134,10 +134,10 @@ function NavigationBar(props) {
                 title={props.role ? props.user.displayName + ", " + props.role.name + " " : " "}
                 className="userSectionNavBar"
               >
-                <NavDropdown.Item className="text-right" href="#action/3.1">
+                {/* <NavDropdown.Item className="text-right" href="#action/3.1">
                   עדכון פרטים
                 </NavDropdown.Item>
-                <NavDropdown.Divider />
+                <NavDropdown.Divider /> */}
                 <NavDropdown.Item
                   onClick={handleSignOut}
                   className="text-right"
