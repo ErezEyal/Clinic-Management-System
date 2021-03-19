@@ -15,14 +15,10 @@ const Dropbox = require("dropbox").Dropbox;
 const { createDoc } = require("./DocGenerator");
 const groupBy = require("lodash.groupby");
 
-// app.use(express.static(path.join(__dirname, 'build')));
-
-if (process.argv.length > 2 && process.argv[2] === "prod") {
+if (process.argv[2] === "prod") {
   console.log("# Production #");
   app.use(express.static(path.join(__dirname, "build")));
 }
-
-// const wordPluginKey = "2021ClinicWordPlugin2021";
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -114,28 +110,10 @@ const permissions = {
   },
 };
 
-app.listen(3001, async () => {
-  console.log("Success - server app listening on port 3001\n");
-
-  // MongoClient.connect(
-  //   MONGO_URI,
-  //   { useUnifiedTopology: true },
-  //   (err, client) => {
-  //     if (err) throw err;
-  //     db = client.db("clinic");
-  //     db.collection("roles").updateOne(
-  //       { admin: true },
-  //       { $set: { admin: true, name: "אדמין" } },
-  //       { upsert: true }
-  //     );
-  //     db.collection("taskGroups").updateOne(
-  //       { closedTasks: true },
-  //       { $set: { title: "מטלות סגורות", closedTasks: true } },
-  //       { upsert: true }
-  //     );
-  //     console.log("Success - connected to DB\n");
-  //   }
-  // );
+app.listen(process.argv[3], async () => {
+  console.log(
+    "Success - server app listening on port " + process.argv[3] + "\n"
+  );
 
   await atlasClient.connect();
   db = atlasClient.db(dbName);
@@ -152,22 +130,7 @@ app.listen(3001, async () => {
   console.log("Success - connected to DB\n");
 });
 
-// const validGetPatientRequest = (req) => {
-//   if (
-//     req.baseUrl + req.path === "/api/patients" &&
-//     req.body.key === wordPluginKey
-//   ) {
-//     return true;
-//   } else {
-//     return false;
-//   }
-// };
-
 const authorization = async (req, res, next) => {
-  // if (validGetPatientRequest(req)) {
-  //   next();
-  //   return;
-  // }
   const reqPath = req.baseUrl + req.path;
   const idToken = req.body.idToken || "";
   const isValid = await validateToken(idToken)
@@ -234,7 +197,6 @@ const getPermissions = async (idToken) => {
     .collection("roles")
     .findOne({ name: role })
     .then((res) => {
-      console.log(role);
       return res;
     })
     .catch((error) => {

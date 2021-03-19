@@ -132,7 +132,7 @@ function Audit(props) {
     let tableRows = filteredEvents.flatMap((event, index) => {
       return (
         <tr key={index}>
-          <td className="pr-lg-5">
+          <td className="pr-lg-5 sticky-col bg-white" style={{ right: 0}}>
             {typeof event.date === "number"
               ? new Date(event.date).toLocaleString("he-IL")
               : ""}
@@ -170,10 +170,10 @@ function Audit(props) {
     const table = [
       <thead key="1">
         <tr>
-          <th className="pr-lg-5">תאריך</th>
-          <th>פעולה</th>
-          <th>משתמש</th>
-          <th>פרטים</th>
+          <th className="pr-lg-5 sticky-col bg-white" style={{ width: "10rem", right: 0 }}>תאריך</th>
+          <th style={{ width: "10rem" }}>פעולה</th>
+          <th style={{ width: "10rem" }}>משתמש</th>
+          <th style={{ width: "10rem" }}>פרטים</th>
         </tr>
       </thead>,
       <tbody key="2">{tableRows}</tbody>,
@@ -253,7 +253,7 @@ function Audit(props) {
           </div>
         </div>
       </div>
-      <div className="d-flex justify-content-center">
+      <div className="d-flex overflow-auto">
         <table
           className="text-break w-100 auditTable"
           style={{ tableLayout: "fixed" }}
