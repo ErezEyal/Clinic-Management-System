@@ -1,6 +1,8 @@
 # Clinic Management App
 
-## Project highlights:
+### Management system for handling overall operations of a medical clinic
+
+## Project Highlights:
 
 * Patient management with extensive patient profile, history, upcoming appointments
 * Integration with Dropbox, preview patient documents
