@@ -466,11 +466,11 @@ function CalendarEventModal(props) {
                     calendars.flatMap((cal, index) => {
                       if (
                         (cal.name === "main" &&
-                          !props.role.addCalendarEvents) ||
+                          !props.role.addCalendarEvents && !props.role.admin) ||
                         (cal.name === "second" &&
-                          !props.role.addSecondCalendarEvents) ||
+                          !props.role.addSecondCalendarEvents && !props.role.admin) ||
                         (cal.name === "third" &&
-                          !props.role.addThirdCalendarEvents)
+                          !props.role.addThirdCalendarEvents && !props.role.admin)
                       ) {
                         return [];
                       }
