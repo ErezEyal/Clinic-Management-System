@@ -13,7 +13,7 @@
 * Detailed audit trail for complete visibility into all system actions 
 * Export patients database and audit trail to CSV format
 
-## Deploy Steps
+## Deploy Steps:
 1. Pull the code from master
 2. Run "NPM run build" inside the "client" directory
 3. Move the generated build folder under the server directory
