@@ -14,7 +14,9 @@
 * Export patients database and audit trail to CSV format
 
 ## Deploy Steps:
+
 1. Pull the code from master
 2. Run "NPM run build" inside the "client" directory
 3. Move the generated build folder under the server directory
+4. If the server is already running, run "mp2 stop express.js"
 4. run "npm run prod" inside the server directory
