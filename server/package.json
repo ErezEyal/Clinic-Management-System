@@ -5,8 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node express.js dev 3001",
-    "prod": "pm2 start express.js -- prod 80",
-    "install": "cd client && mpn run build && echo done"
+    "prod": "pm2 start express.js -- prod 80"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
