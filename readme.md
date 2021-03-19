@@ -1,6 +1,6 @@
 # Clinic Management App
 
-#### Management system for handling overall operations of a medical clinic
+#### Management system for handling the overall operations of a medical clinic.
 
 ## Project Highlights:
 
