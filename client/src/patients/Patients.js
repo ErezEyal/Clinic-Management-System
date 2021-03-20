@@ -287,22 +287,24 @@ function Patients(props) {
             style={{ right: "0px", backgroundColor: "#F5F8FA" }}
             onClick={() => showPatient(patient)}
           >
-            <img
-              src={
-                patient.picture
-                  ? patient.picture
-                  : patient.gender === "male"
-                  ? "/male1.png"
-                  : "/female1.png"
-              }
-              alt={patient.firstName}
-              width="30px"
-              height="30px"
-              className="d-inline mx-2 rounded-circle"
-            ></img>
-            <span className="pointer">
-              {patient.firstName + " " + patient.lastName}
-            </span>
+            <div>
+              <img
+                src={
+                  patient.picture
+                    ? patient.picture
+                    : patient.gender === "male"
+                    ? "/male1.png"
+                    : "/female1.png"
+                }
+                alt={patient.firstName}
+                width="30px"
+                height="30px"
+                className="d-inline mx-2 rounded-circle"
+              ></img>
+              <span className="pointer">
+                {patient.firstName + " " + patient.lastName}
+              </span>
+            </div>
           </td>
 
           <td className="">
@@ -467,19 +469,21 @@ function Patients(props) {
             style={{ width: "17rem", right: "0px", backgroundColor: "#F5F8FA" }}
             onClick={() => handleSorting("firstName")}
           >
-            <span>שם הלקוח</span>
-            <span
-              className="mr-2"
-              hidden={!sortColumn.firstName || sortColumn.firstName === 1}
-            >
-              &#8595;
-            </span>
-            <span
-              className="mr-2"
-              hidden={!sortColumn.firstName || sortColumn.firstName === -1}
-            >
-              &#8593;
-            </span>
+            <div>
+              <span>שם הלקוח</span>
+              <span
+                className="mr-2"
+                hidden={!sortColumn.firstName || sortColumn.firstName === 1}
+              >
+                &#8595;
+              </span>
+              <span
+                className="mr-2"
+                hidden={!sortColumn.firstName || sortColumn.firstName === -1}
+              >
+                &#8593;
+              </span>
+            </div>
           </th>
           <th
             className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
