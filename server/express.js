@@ -25,7 +25,8 @@ if (process.argv[2] === "prod") {
     if (req.secure) {
       next();
     } else {
-      res.redirect("https://" + process.env.HOST);
+      //res.redirect("https://" + process.env.HOST);
+      next();
     }
   });
 }
@@ -113,12 +114,19 @@ const permissions = {
   },
 };
 
-if (process.argv[3] === "prod") {
+if (process.argv[2] === "prod") {
   const options = {
-    key: fs.readFileSync("/etc/letsencrypt/live/app.barelclinic.com/privkey.pem"),
-    cert: fs.readFileSync("/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"),
+    key: fs.readFileSync(
+      "/etc/letsencrypt/live/app.barelclinic.com/privkey.pem",
+      "utf8"
+    ),
+    cert: fs.readFileSync(
+      "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem",
+      "utf8"
+    ),
+    port: process.argv[3],
   };
-  https.createServer(app).listen(options, process.argv[3], async () => {
+  https.createServer(app).listen(options, async () => {
     console.log("HTTPS server is listening on port " + process.argv[3] + "\n");
     await initialServerActions();
   });
@@ -128,7 +136,7 @@ if (process.argv[3] === "prod") {
   });
 }
 
-if (process.argv[3] !== "prod") {
+if (process.argv[2] !== "prod") {
   app.listen(process.argv[3], async () => {
     console.log(
       "Success - server app listening on port " + process.argv[3] + "\n"
