@@ -14,21 +14,24 @@ const calendarApi = require("./calendarApi.js");
 const Dropbox = require("dropbox").Dropbox;
 const { createDoc } = require("./DocGenerator");
 const groupBy = require("lodash.groupby");
+const fs = require("fs");
+const http = require("http");
+const https = require("https");
 
 if (process.argv[2] === "prod") {
   console.log("# Production #");
   app.use(express.static(path.join(__dirname, "build")));
+  app.use(function (req, res, next) {
+    if (req.secure) {
+      next();
+    } else {
+      res.redirect("https://" + process.env.HOST);
+    }
+  });
 }
-
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "*");
-  next();
-});
 
 let db;
 const dbName = "clinic";
-let atlasDB;
 const atlasClient = new MongoClient(MONGO_ATLAS_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -110,11 +113,31 @@ const permissions = {
   },
 };
 
-app.listen(process.argv[3], async () => {
-  console.log(
-    "Success - server app listening on port " + process.argv[3] + "\n"
-  );
+if (process.argv[3] === "prod") {
+  const options = {
+    key: fs.readFileSync("/etc/letsencrypt/live/app.barelclinic.com/privkey.pem"),
+    cert: fs.readFileSync("/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"),
+  };
+  https.createServer(app).listen(options, process.argv[3], async () => {
+    console.log("HTTPS server is listening on port " + process.argv[3] + "\n");
+    await initialServerActions();
+  });
 
+  http.createServer(app).listen(80, () => {
+    console.log("Started HTTP server on port 80");
+  });
+}
+
+if (process.argv[3] !== "prod") {
+  app.listen(process.argv[3], async () => {
+    console.log(
+      "Success - server app listening on port " + process.argv[3] + "\n"
+    );
+    await initialServerActions();
+  });
+}
+
+const initialServerActions = async () => {
   await atlasClient.connect();
   db = atlasClient.db(dbName);
   db.collection("roles").updateOne(
@@ -128,7 +151,8 @@ app.listen(process.argv[3], async () => {
     { upsert: true }
   );
   console.log("Success - connected to DB\n");
-});
+  return true;
+};
 
 const authorization = async (req, res, next) => {
   const reqPath = req.baseUrl + req.path;
