@@ -12,7 +12,7 @@ function Audit(props) {
   const [expandedRow, setExpandedRow] = useState(-1);
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
-  const AUDIT_EXPORT_URL = process.env.REACT_APP_BASE_API_URL + "export-audit"
+  const AUDIT_EXPORT_URL = process.env.REACT_APP_BASE_API_URL + "export-audit";
 
   const searchIcon = (
     <svg
@@ -132,14 +132,17 @@ function Audit(props) {
     let tableRows = filteredEvents.flatMap((event, index) => {
       return (
         <tr key={index}>
-          <td className="pr-lg-5 sticky-col bg-white" style={{ right: 0}}>
+          <td
+            className="pr-lg-5 firstColumnWidth position-absolute bg-white"
+            style={{ right: 0 }}
+          >
             {typeof event.date === "number"
               ? new Date(event.date).toLocaleString("he-IL")
               : ""}
           </td>
-          <td>{event.action}</td>
-          <td>{event.user}</td>
-          <td style={{ whiteSpace: "pre-line" }}>
+          <td style={{ minWidth: "14rem" }}>{event.action}</td>
+          <td style={{ minWidth: "14rem" }}>{event.user}</td>
+          <td style={{ whiteSpace: "pre-line", minWidth: "14rem" }}>
             <div className="d-flex">
               <div className="flex-grow-1">
                 <span className="d-block">{event.details}</span>
@@ -170,15 +173,20 @@ function Audit(props) {
     const table = [
       <thead key="1">
         <tr>
-          <th className="pr-lg-5 sticky-col bg-white" style={{ width: "10rem", right: 0 }}>תאריך</th>
-          <th style={{ width: "10rem" }}>פעולה</th>
-          <th style={{ width: "10rem" }}>משתמש</th>
-          <th style={{ width: "10rem" }}>פרטים</th>
+          <th
+            className="firstColumnWidth position-absolute pr-lg-5 shadow-sm border bg-light"
+            style={{ right: 0 }}
+          >
+            תאריך
+          </th>
+          <th className="shadow-sm border bg-light">פעולה</th>
+          <th className="shadow-sm border bg-light">משתמש</th>
+          <th className="shadow-sm border bg-light">פרטים</th>
         </tr>
       </thead>,
       <tbody key="2">{tableRows}</tbody>,
     ];
-    console.log(filteredEvents)
+    console.log(filteredEvents);
     setTableContent(table);
   }, [filteredEvents, expandedRow]);
 
@@ -227,7 +235,9 @@ function Audit(props) {
           <h6 className="text-secondary mb-0">{totalCount} פעולות</h6>
         </div>
         <div className="d-inline-block float-left">
-          <button className="btn btn-purple-outline" onClick={handleExport}>ייצוא</button>
+          <button className="btn btn-purple-outline" onClick={handleExport}>
+            ייצוא
+          </button>
         </div>
         <hr />
       </div>
@@ -253,13 +263,19 @@ function Audit(props) {
           </div>
         </div>
       </div>
-      <div className="d-flex overflow-auto">
-        <table
-          className="text-break w-100 auditTable"
-          style={{ tableLayout: "fixed" }}
-        >
-          {tableContent}
-        </table>
+      <div className="position-relative">
+        <div className="d-flex overflow-auto tableParentDiv">
+          <table
+            className="text-break w-100 auditTable"
+            style={{
+              tableLayout: "auto",
+              borderSpacing: "10px",
+              borderCollapse: "separate",
+            }}
+          >
+            {tableContent}
+          </table>
+        </div>
       </div>
       {pagination}
     </div>

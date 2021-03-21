@@ -250,10 +250,10 @@ function TemplateForm(props) {
           </div>
           {/* <div className="col-12 px-4">
             <hr />
-          </div>
-          <div className="p-3 ">
+          </div> */}
+          {/* <div className="p-3 ">
             <label className="normalLabelWidth d-block d-md-inline-block ml-3">
-              שדה1
+              שדה1(FieldA)
             </label>
             <div className="normalInputSize d-inline-block">
               <input name="field1" type="text" className="form-control" />

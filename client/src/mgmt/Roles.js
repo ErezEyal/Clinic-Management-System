@@ -170,8 +170,8 @@ function Roles(props) {
       return (
         <tr key={index} className="rolesTableRow" style={{ color: "#007A8C" }}>
           <td
-            className="pr-lg-4 sticky-col bg-white overflow-hidden"
-            style={{ right: "0px", zIndex: 2000 }}
+            className="pr-lg-4 firstColumnWidth position-absolute bg-white overflow-hidden"
+            style={{ right: "0px" }}
           >
             {getRoleNameInputTag(role)}
           </td>
@@ -224,59 +224,59 @@ function Roles(props) {
       <thead key="1">
         <tr style={{ backgroundColor: "#F5F8FA" }}>
           <th
-            className="pr-lg-4 border font-weight-normal sticky-col"
-            style={{ width: "7rem", right: "0px", backgroundColor: "#F5F8FA" }}
+            className="pr-lg-4 border font-weight-normal firstColumnWidth position-absolute shadow-sm"
+            style={{ right: "0px", backgroundColor: "#F5F8FA" }}
           >
             תפקיד
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             ניהול משתמשים
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה בלוגים
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             עדכון פרטי לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             מחיקת רשומת לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             הוספת רשומת לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה ביומן ראשי
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה ביומן ניתוחים
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה ביומן שלישי
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             עריכת יומן ראשי
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             עריכת יומן ניתוחים
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             עריכת יומן שלישי
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה במסמכי לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             צפייה בתמונות לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
             יצירת מסמכי לקוח
           </th>
-          <th className="border font-weight-normal" style={{ width: "7rem" }}>
+          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "13rem" }}>
             יצירת מסמכי לקוח מסווגים
           </th>
           <th
-            className="border font-weight-normal"
-            style={{ width: "7rem" }}
+            className="border font-weight-normal shadow-sm "
+            style={{ minWidth: "3rem" }}
           ></th>
         </tr>
       </thead>,
@@ -441,13 +441,19 @@ function Roles(props) {
             </div>
           </div>
         </div>
-        <div className="d-flex overflow-auto">
-          <table
-            className="text-break w-100 usersTable bg-white border"
-            style={{ tableLayout: "fixed" }}
-          >
-            {tableContent}
-          </table>
+        <div className="position-relative">
+          <div className="d-flex overflow-auto tableParentDiv">
+            <table
+              className="text-break w-100 usersTable bg-white"
+              style={{
+                tableLayout: "auto",
+                borderSpacing: "10px",
+                borderCollapse: "separate",
+              }}
+            >
+              {tableContent}
+            </table>
+          </div>
         </div>
         {pagination}
       </div>

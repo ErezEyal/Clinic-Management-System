@@ -60,11 +60,11 @@ button.active-tab {
 
 .patientsTable td, .usersTable td{
   padding: 0.6rem;
-  /* border-top: 1px solid #dee2e6;
-  border-bottom: 1px solid #dee2e6; */
+  height: 3rem;
 }
 .patientsTable th, .usersTable th {
   padding: 0.6rem;
+  height: 3rem;
   border-bottom: 2px solid #dee2e6;
 }
 
@@ -113,8 +113,14 @@ button.active-tab {
 }
 
 @media (max-width: 600px) { 
-  .firstCol {
-    width: 12rem !important;
+  .firstColumnWidth {
+    width: 13rem !important;
+  }
+  .patientsTable td, .usersTable td{
+    height: 4rem;
+  }
+  .tableParentDiv {
+    margin-right: 12.5rem !important;
   }
 }
 
@@ -124,4 +130,12 @@ button.active-tab {
 
 .firstColCells:hover {
   background-color: rgb(235, 234, 234) !important;
+}
+
+.firstColumnWidth {
+  width: 17rem
+}
+
+.tableParentDiv {
+  margin-right: 16.5rem;
 }

@@ -1,8 +1,6 @@
 .auditTable td{
     padding: 0.75rem;
-    border-top: 1px solid #dee2e6;
 }
 .auditTable th {
     padding: 0.75rem;
-    border-bottom: 2px solid #dee2e6;
   }

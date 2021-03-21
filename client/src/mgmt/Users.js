@@ -178,9 +178,13 @@ function Users(props) {
     let tableRows = filteredUsers.map((user, index) => {
       // this func should not handle filtering
       return (
-        <tr key={index} className="usersTableRow" style={{ color: "#007A8C" }}>
+        <tr
+          key={index}
+          className="usersTableRow"
+          style={{ color: "#007A8C" }}
+        >
           <td
-            className="pr-lg-4 sticky-col bg-light firstCol"
+            className="firstColumnWidth position-absolute pr-lg-4"
             style={{ right: "0px" }}
           >
             <img
@@ -191,20 +195,20 @@ function Users(props) {
             ></img>
             <span>{user.name}</span>
           </td>
-          <td>
+          <td style={{ minWidth: "14rem" }}>
             <span>{user.email}</span>
           </td>
-          <td>
+          <td style={{ minWidth: "14rem" }}>
             <span dir="ltr">{user.phoneNumber}</span>
           </td>
-          <td>
+          <td style={{ minWidth: "14rem" }}>
             {user.mfa ? (
               <span className="text-success">פעיל</span>
             ) : (
               <span className="text-danger">כבוי</span>
             )}
           </td>
-          <td>
+          <td style={{ minWidth: "14rem" }}>
             <span>{user.role}</span>
             <div className="d-inline-block float-left">
               <span
@@ -237,23 +241,15 @@ function Users(props) {
       <thead key="1">
         <tr style={{ backgroundColor: "#F5F8FA" }}>
           <th
-            className="pr-lg-5 border font-weight-normal sticky-col firstCol"
-            style={{ width: "14rem", backgroundColor: "#F5F8FA", right: "0px" }}
+            className="firstColumnWidth position-absolute pr-lg-5 border font-weight-normal sticky-col firstCol shadow-sm"
+            style={{ backgroundColor: "#F5F8FA", right: "0px" }}
           >
             שם
           </th>
-          <th className="border font-weight-normal" style={{ width: "14rem" }}>
-            כתובת מייל
-          </th>
-          <th className="border font-weight-normal" style={{ width: "14rem" }}>
-            מספר טלפון
-          </th>
-          <th className="border font-weight-normal" style={{ width: "14rem" }}>
-            אימות דו שלבי
-          </th>
-          <th className="border font-weight-normal" style={{ width: "14rem" }}>
-            תפקיד
-          </th>
+          <th className="border font-weight-normal shadow-sm">כתובת מייל</th>
+          <th className="border font-weight-normal shadow-sm">מספר טלפון</th>
+          <th className="border font-weight-normal shadow-sm">אימות דו שלבי</th>
+          <th className="border font-weight-normal shadow-sm">תפקיד</th>
         </tr>
       </thead>,
       <tbody key="2">{tableRows}</tbody>,
@@ -465,13 +461,19 @@ function Users(props) {
             </div>
           </div>
         </div>
-        <div className="d-flex overflow-auto">
-          <table
-            className="text-break w-100 usersTable bg-white border"
-            style={{ tableLayout: "fixed" }}
-          >
-            {tableContent}
-          </table>
+        <div className="position-relative">
+          <div className="d-flex overflow-auto tableParentDiv">
+            <table
+              className="text-break w-100 usersTable bg-white"
+              style={{
+                tableLayout: "auto",
+                borderSpacing: "10px",
+                borderCollapse: "separate",
+              }}
+            >
+              {tableContent}
+            </table>
+          </div>
         </div>
         {pagination}
       </div>

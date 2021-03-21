@@ -283,28 +283,26 @@ function Patients(props) {
           onClick={() => showPatientModal(patient)}
         >
           <td
-            className="pr-lg-2 sticky-col border shadow-sm firstColCells"
+            className="pr-lg-2 position-absolute firstColumnWidth border shadow-sm firstColCells"
             style={{ right: "0px", backgroundColor: "#F5F8FA" }}
             onClick={() => showPatient(patient)}
           >
-            <div>
-              <img
-                src={
-                  patient.picture
-                    ? patient.picture
-                    : patient.gender === "male"
-                    ? "/male1.png"
-                    : "/female1.png"
-                }
-                alt={patient.firstName}
-                width="30px"
-                height="30px"
-                className="d-inline mx-2 rounded-circle"
-              ></img>
-              <span className="pointer">
-                {patient.firstName + " " + patient.lastName}
-              </span>
-            </div>
+            <img
+              src={
+                patient.picture
+                  ? patient.picture
+                  : patient.gender === "male"
+                  ? "/male1.png"
+                  : "/female1.png"
+              }
+              alt={patient.firstName}
+              width="30px"
+              height="30px"
+              className="d-inline mx-2 rounded-circle"
+            ></img>
+            <span className="pointer">
+              {patient.firstName + " " + patient.lastName}
+            </span>
           </td>
 
           <td className="">
@@ -465,25 +463,23 @@ function Patients(props) {
       <thead key="1">
         <tr style={{ backgroundColor: "#F5F8FA" }} className="patientsHeader">
           <th
-            className="pr-lg-3 border font-weight-normal sticky-col firstCol pointer patientsHeaderCell shadow-sm"
-            style={{ width: "17rem", right: "0px", backgroundColor: "#F5F8FA" }}
+            className="pr-lg-3 border font-weight-normal firstColumnWidth position-absolute pointer patientsHeaderCell shadow-sm"
+            style={{ right: "0px", backgroundColor: "#F5F8FA" }}
             onClick={() => handleSorting("firstName")}
           >
-            <div>
-              <span>שם הלקוח</span>
-              <span
-                className="mr-2"
-                hidden={!sortColumn.firstName || sortColumn.firstName === 1}
-              >
-                &#8595;
-              </span>
-              <span
-                className="mr-2"
-                hidden={!sortColumn.firstName || sortColumn.firstName === -1}
-              >
-                &#8593;
-              </span>
-            </div>
+            <span>שם הלקוח</span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.firstName || sortColumn.firstName === 1}
+            >
+              &#8595;
+            </span>
+            <span
+              className="mr-2"
+              hidden={!sortColumn.firstName || sortColumn.firstName === -1}
+            >
+              &#8593;
+            </span>
           </th>
           <th
             className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
@@ -1027,17 +1023,19 @@ function Patients(props) {
             </div>
           </div>
         </div>
-        <div className="d-flex overflow-auto">
-          <table
-            className="text-break w-100 patientsTable bg-white"
-            style={{
-              tableLayout: "fixed",
-              borderSpacing: "10px",
-              borderCollapse: "separate",
-            }}
-          >
-            {tableContent}
-          </table>
+        <div className="position-relative">
+          <div className="d-flex overflow-auto tableParentDiv">
+            <table
+              className="text-break w-100 patientsTable bg-white"
+              style={{
+                tableLayout: "fixed",
+                borderSpacing: "10px",
+                borderCollapse: "separate",
+              }}
+            >
+              {tableContent}
+            </table>
+          </div>
         </div>
         {pagination}
       </div>
