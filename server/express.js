@@ -122,7 +122,7 @@ if (process.argv[2] === "prod") {
     cert: fs.readFileSync(
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
-    ca: fs.readFileSync('/etc/letsencrypt/path/to/chain.pem'),
+    ca: fs.readFileSync('/etc/letsencrypt/live/app.barelclinic.com/chain.pem'),
     port: process.argv[3],
   };
   https.createServer(app).listen(options, async () => {
