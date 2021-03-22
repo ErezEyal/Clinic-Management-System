@@ -25,7 +25,7 @@ if (process.argv[2] === "prod") {
     if (req.secure) {
       next();
     } else {
-      //res.redirect("https://" + process.env.HOST);
+      res.redirect("https://" + process.env.HOST);
       next();
     }
   });
@@ -123,7 +123,7 @@ if (process.argv[2] === "prod") {
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
   };
-  https.createServer(options, app).listen(443, async () => {
+  https.createServer(options, app).listen(443, process.env.HOST , async () => {
     console.log("HTTPS server is listening on port 443 \n");
     await initialServerActions();
   });
