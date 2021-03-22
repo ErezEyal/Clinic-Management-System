@@ -21,13 +21,6 @@ const https = require("https");
 if (process.argv[2] === "prod") {
   console.log("# Production #");
   app.use(express.static(path.join(__dirname, "build")));
-  app.use(function (req, res, next) {
-    if (req.secure) {
-      next();
-    } else {
-      res.redirect("https://" + process.env.HOST);
-    }
-  });
 }
 
 let db;
@@ -114,6 +107,7 @@ const permissions = {
 };
 
 if (process.argv[2] === "prod") {
+  console.log("# Production #");
   const options = {
     key: fs.readFileSync(
       "/etc/letsencrypt/live/app.barelclinic.com/privkey.pem"
@@ -122,17 +116,20 @@ if (process.argv[2] === "prod") {
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
   };
+  app.use(express.static(path.join(__dirname, "build")));
+
   https.createServer(options, app).listen(443, async () => {
     console.log("HTTPS server is listening on port 443 \n");
     await initialServerActions();
   });
 
   http.createServer(app).listen(80, () => {
-    console.log("Started HTTP server on port 80");
+    console.log("HTTP server is listening on port 80 \n");
   });
 }
 
 if (process.argv[2] !== "prod") {
+  console.log("# Development #");
   app.listen(process.argv[3], async () => {
     console.log(
       "Success - server app listening on port " + process.argv[3] + "\n"
@@ -1229,11 +1226,15 @@ const createPatientDPFolder = (patient) => {
     });
 };
 
-app.get("/*", (req, res) => {
+app.get("/", (req, res) => {
   if (process.argv.length > 2 && process.argv[2] === "prod") {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
+    if (req.secure) {
+      res.sendFile(path.join(__dirname, "build", "index.html"));
+    } else {
+      res.redirect("https://" + process.env.HOST);
+    }
   } else {
-    res.send("OK");
+    res.send("This Is Dev Environment");
   }
 });
 
@@ -1597,6 +1598,7 @@ app.delete("/api/taskgroup", authorization, (req, res) => {
 
 app.get("/api/google-code", (req, res) => {
   res.send(req.query.code);
+  // change?
 });
 
 app.post("/api/calendar-events", authorization, (req, res) => {
