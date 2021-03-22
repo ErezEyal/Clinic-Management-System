@@ -1226,7 +1226,7 @@ const createPatientDPFolder = (patient) => {
     });
 };
 
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   if (process.argv.length > 2 && process.argv[2] === "prod") {
     if (req.secure) {
       res.sendFile(path.join(__dirname, "build", "index.html"));
