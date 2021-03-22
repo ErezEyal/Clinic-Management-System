@@ -123,7 +123,7 @@ if (process.argv[2] === "prod") {
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
   };
-  https.createServer(options, app).listen(443, "0.0.0.0", async () => {
+  https.createServer(options, app).listen({ port: 443 }, async () => {
     console.log("HTTPS server is listening on port 443 \n");
     await initialServerActions();
   });
