@@ -117,13 +117,12 @@ const permissions = {
 if (process.argv[2] === "prod") {
   const options = {
     key: fs.readFileSync(
-      "/etc/letsencrypt/live/app.barelclinic.com/privkey.pem",
-      "utf8"
+      "/etc/letsencrypt/live/app.barelclinic.com/privkey.pem"
     ),
     cert: fs.readFileSync(
-      "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem",
-      "utf8"
+      "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
+    ca: fs.readFileSync('/etc/letsencrypt/path/to/chain.pem'),
     port: process.argv[3],
   };
   https.createServer(app).listen(options, async () => {
