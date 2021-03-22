@@ -122,20 +122,9 @@ if (process.argv[2] === "prod") {
     cert: fs.readFileSync(
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
-    ca: fs.readFileSync("/etc/letsencrypt/live/app.barelclinic.com/chain.pem"),
-    ciphers: [
-      "ECDHE-RSA-AES128-SHA256",
-      "DHE-RSA-AES128-SHA256",
-      "AES128-GCM-SHA256",
-      "RC4",
-      "HIGH",
-      "!MD5",
-      "!aNULL",
-    ].join(":"),
-    port: process.argv[3],
   };
-  https.createServer(app).listen(options, async () => {
-    console.log("HTTPS server is listening on port " + process.argv[3] + "\n");
+  https.createServer(options, app).listen(443, async () => {
+    console.log("HTTPS server is listening on port 443 \n");
     await initialServerActions();
   });
 
