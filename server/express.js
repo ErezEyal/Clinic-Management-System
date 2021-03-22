@@ -18,11 +18,6 @@ const fs = require("fs");
 const http = require("http");
 const https = require("https");
 
-if (process.argv[2] === "prod") {
-  console.log("# Production #");
-  app.use(express.static(path.join(__dirname, "build")));
-}
-
 let db;
 const dbName = "clinic";
 const atlasClient = new MongoClient(MONGO_ATLAS_URI, {
@@ -116,7 +111,7 @@ if (process.argv[2] === "prod") {
       "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
     ),
   };
-  app.use(express.static(path.join(__dirname, "build")));
+  app.use(express.static(path.join(__dirname, "build"), { index: false }));
 
   https.createServer(options, app).listen(443, async () => {
     console.log("HTTPS server is listening on port 443 \n");
