@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import DatePicker, { registerLocale } from "react-datepicker";
 import he from "date-fns/locale/he";
 import imageCompression from "browser-image-compression";
+import ConfirmationModal from "../root/ConfirmationModal";
 registerLocale("he", he);
 
 function PatientModal(props) {
@@ -15,14 +16,15 @@ function PatientModal(props) {
   const [birthDate, setBirthDate] = useState(Date.parse(new Date()));
   const [id, setId] = useState("");
   const [passport, setPassport] = useState("");
+  const [usePassport, setUsePassport] = useState(false);
   const [gender, setGender] = useState("female");
   const [picture, setPicture] = useState(null);
   const [comment, setComment] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
-  const [bool1, setBool1] = useState(false);
-  const [bool2, setBool2] = useState(false);
-  const [bool3, setBool3] = useState(false);
+  const [bool1, setBool1] = useState("לא");
+  const [bool2, setBool2] = useState("לא");
+  const [bool3, setBool3] = useState("לא");
   const [saveDisabled, setSaveDisabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -30,6 +32,8 @@ function PatientModal(props) {
   const [procedures, setProcedures] = useState([]);
   const [minimizeCategories, setMinimizeCategories] = useState(true);
   const [minimizeProcedures, setMinimizeProcedures] = useState(true);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
   const imageInputRef = useRef();
   const history = useHistory();
 
@@ -49,6 +53,7 @@ function PatientModal(props) {
       setBirthDate(props.patient.birthDate || Date.parse(new Date()));
       setId(props.patient.id);
       setPassport(props.patient.passport);
+      setUsePassport(props.patient.usePassport);
       setGender(props.patient.gender);
       setPicture(props.patient.picture);
       setComment(props.patient.comment);
@@ -61,14 +66,15 @@ function PatientModal(props) {
       setEmail("");
       setEmail("");
       setCity("");
-      setBool1(false);
-      setBool2(false);
-      setBool3(false);
+      setBool1("לא");
+      setBool2("לא");
+      setBool3("לא");
       setPhone("");
       setSecondPhone("");
       setBirthDate(Date.parse(new Date()));
       setId("");
       setPassport("");
+      setUsePassport(false);
       setGender("female");
       setPicture(null);
       setComment("");
@@ -96,6 +102,7 @@ function PatientModal(props) {
     else if (props.patient.birthDate !== birthDate) profileChanged = true;
     else if (props.patient.id !== id) profileChanged = true;
     else if (props.patient.passport !== passport) profileChanged = true;
+    else if (props.patient.usePassport !== usePassport) profileChanged = true;
     else if (props.patient.gender !== gender) profileChanged = true;
     else if (props.patient.picture !== picture) profileChanged = true;
     else if (props.patient.secondPhone !== secondPhone) profileChanged = true;
@@ -121,6 +128,7 @@ function PatientModal(props) {
     category,
     procedures,
     passport,
+    usePassport,
     picture,
     props.patient,
     city,
@@ -162,6 +170,7 @@ function PatientModal(props) {
         birthDate: birthDate,
         id: id,
         passport: passport,
+        usePassport: usePassport,
         gender: gender,
         picture: picture,
         comment: comment,
@@ -266,18 +275,6 @@ function PatientModal(props) {
     }
   };
 
-  const handleProceduresChange = (procedure, checked) => {
-    if (checked && !procedures.includes(procedure)) {
-      const tempProcedures = [...procedures];
-      tempProcedures.push(procedure);
-      setProcedures(tempProcedures);
-    } else if (!checked && procedures.includes(procedure)) {
-      const tempProcedures = [...procedures];
-      tempProcedures.splice(procedures.indexOf(procedure), 1);
-      setProcedures(tempProcedures);
-    }
-  };
-
   const calculateAge = (bDate) => {
     const ageDifMs = Date.now() - new Date(bDate).getTime();
     const ageDate = new Date(ageDifMs);
@@ -288,637 +285,660 @@ function PatientModal(props) {
     return gender === "male" ? "זכר" : "נקבה";
   };
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
-    <Modal
-      size="lg"
-      onHide={props.hide}
-      show={props.show}
-      className="text-right"
-    >
-      <div
-        className="modal-content shadow-lg"
-        style={{ backgroundColor: "#f4f5f7" }}
+    <>
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
+      <Modal
+        size="lg"
+        onHide={props.hide}
+        show={props.show && !confirmationText}
+        className="text-right"
       >
-        <div className="bg-white h-100 rounded-lg border p-4">
-          <div className="d-flex">
-            <div className="flex-shrink-1" style={{ maxWidth: "200px" }}>
-              <input
-                type="file"
-                className="d-none"
-                id="imageFile"
-                onChange={handleImageChange}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                ref={imageInputRef}
-                accept="image/*"
-              />
-              <div className="mt-2">
-                <label className="pointer my-0 text-muted" htmlFor="imageFile">
-                  <img
-                    alt="patient"
-                    src={
-                      picture
-                        ? picture
-                        : gender === "female"
-                        ? "/female1.png"
-                        : "/male1.png"
+        <div
+          className="modal-content shadow-lg"
+          style={{ backgroundColor: "#f4f5f7" }}
+        >
+          <div className="bg-white h-100 rounded-lg border p-4">
+            <div className="d-flex">
+              <div className="flex-shrink-1" style={{ maxWidth: "200px" }}>
+                <input
+                  type="file"
+                  className="d-none"
+                  id="imageFile"
+                  onChange={handleImageChange}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  ref={imageInputRef}
+                  accept="image/*"
+                />
+                <div className="mt-2">
+                  <label
+                    className="pointer my-0 text-muted"
+                    htmlFor="imageFile"
+                  >
+                    <img
+                      alt="patient"
+                      src={
+                        picture
+                          ? picture
+                          : gender === "female"
+                          ? "/female1.png"
+                          : "/male1.png"
+                      }
+                      width="100%"
+                      className="rounded-lg shadow border border-light"
+                    ></img>
+                  </label>
+                </div>
+              </div>
+              <div className="flex-grow-1 pr-3">
+                <h3 className="mt-3" style={{ color: "#4b4b4ceb" }}>
+                  {firstName + " " + lastName}
+                </h3>
+                <span
+                  className=""
+                  hidden={!firstName && !lastName}
+                >{`${getGender(gender)}, ${calculateAge(birthDate)}`}</span>
+                <p className="text-muted mt-1 mb-0">
+                  <span>{phone}</span>
+                </p>
+                <p className="text-muted mt-1">
+                  <span>{email}</span>
+                </p>
+              </div>
+            </div>
+            <hr />
+            <div className="px-sm-4 d-flex flex-wrap">
+              <div className="mb-3 mt-4 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">שם פרטי</span>
+                  <span
+                    className={
+                      !props.patient || firstName === props.patient.firstName
+                        ? "d-none"
+                        : ""
                     }
-                    width="100%"
-                    className="rounded-lg shadow border border-light"
-                  ></img>
-                </label>
-              </div>
-            </div>
-            <div className="flex-grow-1 pr-3">
-              <h3 className="mt-3" style={{ color: "#4b4b4ceb" }}>
-                {firstName + " " + lastName}
-              </h3>
-              <span className="" hidden={!firstName && !lastName}>{`${getGender(
-                gender
-              )}, ${calculateAge(birthDate)}`}</span>
-              <p className="text-muted mt-1 mb-0">
-                <span>{phone}</span>
-              </p>
-              <p className="text-muted mt-1">
-                <span>{email}</span>
-              </p>
-            </div>
-          </div>
-          <hr />
-          <div className="px-sm-4 d-flex flex-wrap">
-            <div className="mb-3 mt-4 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">שם פרטי</span>
-                <span
-                  className={
-                    !props.patient || firstName === props.patient.firstName
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">שם משפחה</span>
-                <span
-                  className={
-                    !props.patient || lastName === props.patient.lastName
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={lastName}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setLastName(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-            <div className="my-3 col-md-6">
-              <div className="">
-                <span className="my-1 text-secondary ml-2">כתובת מייל</span>
-                <span
-                  className={
-                    !props.patient || email === props.patient.email
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={email}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setEmail(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div className="">
-                <span className="my-1 text-secondary ml-2">עיר</span>
-                <span
-                  className={
-                    !props.patient || city === props.patient.city
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={city}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setCity(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div className="">
-                <span className="my-1 text-secondary ml-2">כתובת מגורים</span>
-                <span
-                  className={
-                    !props.patient || address === props.patient.address
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={address}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setAddress(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">מספר טלפון</span>
-                <span
-                  className={
-                    !props.patient || phone === props.patient.phone
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                className="patientModalInput"
-              ></input>
-            </div>
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">מספר טלפון שני</span>
-                <span
-                  className={
-                    !props.patient || secondPhone === props.patient.secondPhone
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={secondPhone}
-                onChange={(e) => setSecondPhone(e.target.value)}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                className="patientModalInput"
-              ></input>
-            </div>
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">תאריך לידה</span>
-                <span
-                  className={
-                    !props.patient || birthDate === props.patient.birthDate
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <div>
-                <DatePicker
-                  selected={new Date(birthDate)}
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  onChange={(newDate) => setBirthDate(Date.parse(newDate))}
-                  locale="he"
-                  dateFormat="dd/MM/yyyy"
-                  popperModifiers={{
-                    preventOverflow: {
-                      enabled: true,
-                      escapeWithReference: false,
-                      boundariesElement: "viewport",
-                    },
-                  }}
-                  className="text-right patientModalInput"
-                />
-              </div>
-            </div>
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">תעודת זהות</span>
-                <span
-                  className={
-                    !props.patient || id === props.patient.id ? "d-none" : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={id}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setId(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">מספר דרכון</span>
-                <span
-                  className={
-                    !props.patient || passport === props.patient.passport
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={passport}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setPassport(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">מין</span>
-                <span
-                  className={
-                    !props.patient || gender === props.patient.gender
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-
-              <div className="form-check form-check-inline mr-0">
-                <label className="form-check-label" htmlFor="male">
-                  זכר
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="gender"
-                  id="male"
-                  value="male"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  checked={gender === "male"}
-                  onChange={(e) => setGender(e.target.value)}
-                />
-              </div>
-              <div className="form-check form-check-inline">
-                <label className="form-check-label" htmlFor="female">
-                  נקבה
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="gender"
-                  id="female"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  value="female"
-                  checked={gender === "female"}
-                  onChange={(e) => setGender(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">שדה1</span>
-                <span
-                  className={
-                    !props.patient || bool1 === props.patient.bool1
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-
-              <div className="form-check form-check-inline mr-0">
-                <label className="form-check-label" htmlFor="yesBool1">
-                  כן
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="yesBool1"
-                  value="כן"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  checked={bool1 === "כן"}
-                  onChange={(e) => setBool1(e.target.value)}
-                />
-              </div>
-              <div className="form-check form-check-inline">
-                <label className="form-check-label" htmlFor="noBool1">
-                  לא
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="noBool1"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  value="לא"
-                  checked={bool1 === "לא"}
-                  onChange={(e) => setBool1(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">שדה2</span>
-                <span
-                  className={
-                    !props.patient || bool2 === props.patient.bool2
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-
-              <div className="form-check form-check-inline mr-0">
-                <label className="form-check-label" htmlFor="yesBool2">
-                  כן
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="yesBool2"
-                  value="כן"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  checked={bool2 === "כן"}
-                  onChange={(e) => setBool2(e.target.value)}
-                />
-              </div>
-              <div className="form-check form-check-inline">
-                <label className="form-check-label" htmlFor="noBool2">
-                  לא
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="noBool2"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  value="לא"
-                  checked={bool2 === "לא"}
-                  onChange={(e) => setBool2(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">שדה3</span>
-                <span
-                  className={
-                    !props.patient || bool3 === props.patient.bool3
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-
-              <div className="form-check form-check-inline mr-0">
-                <label className="form-check-label" htmlFor="yesBool3">
-                  כן
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="yesBool3"
-                  value="כן"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  checked={bool3 === "כן"}
-                  onChange={(e) => setBool3(e.target.value)}
-                />
-              </div>
-              <div className="form-check form-check-inline">
-                <label className="form-check-label" htmlFor="noBool3">
-                  לא
-                </label>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  id="noBool3"
-                  disabled={
-                    !props.role ||
-                    (props.patient &&
-                      !props.role.updateCustomer &&
-                      !props.role.admin)
-                  }
-                  value="לא"
-                  checked={bool3 === "לא"}
-                  onChange={(e) => setBool3(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">הערות</span>
-                <span
-                  className={
-                    !props.patient || comment === props.patient.comment
-                      ? "d-none"
-                      : ""
-                  }
-                >
-                  {exclamation}
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="--"
-                value={comment}
-                disabled={
-                  !props.role ||
-                  (props.patient &&
-                    !props.role.updateCustomer &&
-                    !props.role.admin)
-                }
-                onChange={(e) => setComment(e.target.value)}
-                className="patientModalInput"
-              ></input>
-            </div>
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-3">שיוך</span>
-                <button
-                  className="btn p-0 shadow-none fontSmall"
-                  onClick={() => setMinimizeCategories(!minimizeCategories)}
-                >
-                  <span className="text-secondary">
-                    {minimizeCategories ? "הצג" : "הסתר"}
+                  >
+                    {exclamation}
                   </span>
-                </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="patientModalInput"
+                ></input>
               </div>
-              <div className="d-flex flex-wrap">
-                {category &&
-                  props.categories.map((cat) => {
-                    return (
-                      <div
-                        className="pl-3 py-1"
-                        hidden={minimizeCategories && !category.includes(cat)}
-                      >
-                        <input
-                          type="checkbox"
-                          onChange={(e) =>
-                            handleCategoryChange(cat, e.target.checked)
-                          }
-                          disabled={
-                            !props.role ||
-                            (props.patient &&
-                              !props.role.updateCustomer &&
-                              !props.role.admin)
-                          }
-                          checked={category.includes(cat)}
-                        />
-                        <label className="mr-2">{cat}</label>
-                      </div>
-                    );
-                  })}
-                {props.patient &&
-                  props.patient.category &&
-                  props.patient.category.flatMap((cat) => {
-                    if (!props.categories.includes(cat)) {
-                      return [
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">שם משפחה</span>
+                  <span
+                    className={
+                      !props.patient || lastName === props.patient.lastName
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={lastName}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+              <div className="my-3 col-md-6">
+                <div className="">
+                  <span className="my-1 text-secondary ml-2">כתובת מייל</span>
+                  <span
+                    className={
+                      !props.patient || email === props.patient.email
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={email}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div className="">
+                  <span className="my-1 text-secondary ml-2">עיר</span>
+                  <span
+                    className={
+                      !props.patient || city === props.patient.city
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={city}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setCity(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div className="">
+                  <span className="my-1 text-secondary ml-2">כתובת מגורים</span>
+                  <span
+                    className={
+                      !props.patient || address === props.patient.address
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={address}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">מספר טלפון</span>
+                  <span
+                    className={
+                      !props.patient || phone === props.patient.phone
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  className="patientModalInput"
+                ></input>
+              </div>
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">
+                    מספר טלפון שני
+                  </span>
+                  <span
+                    className={
+                      !props.patient ||
+                      secondPhone === props.patient.secondPhone
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={secondPhone}
+                  onChange={(e) => setSecondPhone(e.target.value)}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  className="patientModalInput"
+                ></input>
+              </div>
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">תאריך לידה</span>
+                  <span
+                    className={
+                      !props.patient || birthDate === props.patient.birthDate
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <div>
+                  <DatePicker
+                    selected={new Date(birthDate)}
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    onChange={(newDate) => setBirthDate(Date.parse(newDate))}
+                    locale="he"
+                    dateFormat="dd/MM/yyyy"
+                    popperModifiers={{
+                      preventOverflow: {
+                        enabled: true,
+                        escapeWithReference: false,
+                        boundariesElement: "viewport",
+                      },
+                    }}
+                    className="text-right patientModalInput"
+                  />
+                </div>
+              </div>
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">תעודת זהות</span>
+                  <span
+                    className={
+                      !props.patient || id === props.patient.id ? "d-none" : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={id}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setId(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">מספר דרכון</span>
+                  <div className="d-inline ml-2">
+                    <input
+                      type="checkbox"
+                      disabled={
+                        !props.role ||
+                        (props.patient &&
+                          !props.role.updateCustomer &&
+                          !props.role.admin)
+                      }
+                      onChange={(e) => setUsePassport(e.target.checked)}
+                      checked={usePassport}
+                    />
+                  </div>
+                  <span
+                    className={
+                      !props.patient ||
+                      (!props.patient.usePassport && !usePassport) ||
+                      (passport === props.patient.passport &&
+                        usePassport === props.patient.usePassport)
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={usePassport ? passport : ""}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => {
+                    if (usePassport) {
+                      setPassport(e.target.value);
+                    }
+                  }}
+                  className="patientModalInput"
+                ></input>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">מין</span>
+                  <span
+                    className={
+                      !props.patient || gender === props.patient.gender
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+
+                <div className="form-check form-check-inline mr-0">
+                  <label className="form-check-label" htmlFor="male">
+                    זכר
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="gender"
+                    id="male"
+                    value="male"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    checked={gender === "male"}
+                    onChange={(e) => setGender(e.target.value)}
+                  />
+                </div>
+                <div className="form-check form-check-inline">
+                  <label className="form-check-label" htmlFor="female">
+                    נקבה
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="gender"
+                    id="female"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    value="female"
+                    checked={gender === "female"}
+                    onChange={(e) => setGender(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">שדה1</span>
+                  <span
+                    className={
+                      !props.patient || bool1 === props.patient.bool1
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+
+                <div className="form-check form-check-inline mr-0">
+                  <label className="form-check-label" htmlFor="yesBool1">
+                    כן
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="yesBool1"
+                    value="כן"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    checked={bool1 === "כן"}
+                    onChange={(e) => setBool1(e.target.value)}
+                  />
+                </div>
+                <div className="form-check form-check-inline">
+                  <label className="form-check-label" htmlFor="noBool1">
+                    לא
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="noBool1"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    value="לא"
+                    checked={bool1 === "לא"}
+                    onChange={(e) => setBool1(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">שדה2</span>
+                  <span
+                    className={
+                      !props.patient || bool2 === props.patient.bool2
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+
+                <div className="form-check form-check-inline mr-0">
+                  <label className="form-check-label" htmlFor="yesBool2">
+                    כן
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="yesBool2"
+                    value="כן"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    checked={bool2 === "כן"}
+                    onChange={(e) => setBool2(e.target.value)}
+                  />
+                </div>
+                <div className="form-check form-check-inline">
+                  <label className="form-check-label" htmlFor="noBool2">
+                    לא
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="noBool2"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    value="לא"
+                    checked={bool2 === "לא"}
+                    onChange={(e) => setBool2(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">שדה3</span>
+                  <span
+                    className={
+                      !props.patient || bool3 === props.patient.bool3
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+
+                <div className="form-check form-check-inline mr-0">
+                  <label className="form-check-label" htmlFor="yesBool3">
+                    כן
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="yesBool3"
+                    value="כן"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    checked={bool3 === "כן"}
+                    onChange={(e) => setBool3(e.target.value)}
+                  />
+                </div>
+                <div className="form-check form-check-inline">
+                  <label className="form-check-label" htmlFor="noBool3">
+                    לא
+                  </label>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="noBool3"
+                    disabled={
+                      !props.role ||
+                      (props.patient &&
+                        !props.role.updateCustomer &&
+                        !props.role.admin)
+                    }
+                    value="לא"
+                    checked={bool3 === "לא"}
+                    onChange={(e) => setBool3(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">הערות</span>
+                  <span
+                    className={
+                      !props.patient || comment === props.patient.comment
+                        ? "d-none"
+                        : ""
+                    }
+                  >
+                    {exclamation}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="--"
+                  value={comment}
+                  disabled={
+                    !props.role ||
+                    (props.patient &&
+                      !props.role.updateCustomer &&
+                      !props.role.admin)
+                  }
+                  onChange={(e) => setComment(e.target.value)}
+                  className="patientModalInput"
+                ></input>
+              </div>
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-3">שיוך</span>
+                  <button
+                    className="btn p-0 shadow-none fontSmall"
+                    onClick={() => setMinimizeCategories(!minimizeCategories)}
+                  >
+                    <span className="text-secondary">
+                      {minimizeCategories ? "הצג" : "הסתר"}
+                    </span>
+                  </button>
+                </div>
+                <div className="d-flex flex-wrap">
+                  {category &&
+                    props.categories.map((cat) => {
+                      return (
                         <div
                           className="pl-3 py-1"
                           hidden={minimizeCategories && !category.includes(cat)}
@@ -937,88 +957,116 @@ function PatientModal(props) {
                             checked={category.includes(cat)}
                           />
                           <label className="mr-2">{cat}</label>
-                        </div>,
-                      ];
-                    } else {
-                      return [];
-                    }
-                  })}
+                        </div>
+                      );
+                    })}
+                  {props.patient &&
+                    props.patient.category &&
+                    props.patient.category.flatMap((cat) => {
+                      if (!props.categories.includes(cat)) {
+                        return [
+                          <div
+                            className="pl-3 py-1"
+                            hidden={
+                              minimizeCategories && !category.includes(cat)
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              onChange={(e) =>
+                                handleCategoryChange(cat, e.target.checked)
+                              }
+                              disabled={
+                                !props.role ||
+                                (props.patient &&
+                                  !props.role.updateCustomer &&
+                                  !props.role.admin)
+                              }
+                              checked={category.includes(cat)}
+                            />
+                            <label className="mr-2">{cat}</label>
+                          </div>,
+                        ];
+                      } else {
+                        return [];
+                      }
+                    })}
+                </div>
               </div>
-            </div>
 
-            <div className="my-3 col-md-6">
-              <div>
-                <span className="my-1 text-secondary ml-2">פעולות</span>
+              <div className="my-3 col-md-6">
+                <div>
+                  <span className="my-1 text-secondary ml-2">פעולות</span>
+                </div>
+                <p title={procedures.join(", ")}>{procedures.join(", ")}</p>
               </div>
-              <p title={procedures.join(", ")}>{procedures.join(", ")}</p>
             </div>
-          </div>
-          <div className="text-center my-2">
-            <span className="text-success">{successMessage}</span>
-            <span className="text-danger">{errorMessage}</span>
-          </div>
-          <hr />
-          <div className="m-3 mt-4">
-            <button
-              disabled={saveDisabled}
-              className="btn btn-outline-primary"
-              hidden={
-                !props.role ||
-                (props.patient &&
-                  !props.role.updateCustomer &&
-                  !props.role.admin)
-              }
-              onClick={saveChanges}
-            >
-              {props.patient ? "עדכן פרטים" : "הוסף לקוח"}
-            </button>
-            
-            <div className="d-inline">
+            <div className="text-center my-2">
+              <span className="text-success">{successMessage}</span>
+              <span className="text-danger">{errorMessage}</span>
+            </div>
+            <hr />
+            <div className="m-3 mt-4">
               <button
-                className="btn btn-outline-danger mr-2"
+                disabled={saveDisabled}
+                className="btn btn-outline-primary"
                 hidden={
                   !props.role ||
-                  !props.deletePatient ||
-                  !props.patient ||
-                  (!props.role.deleteCustomer && !props.role.admin)
+                  (props.patient &&
+                    !props.role.updateCustomer &&
+                    !props.role.admin)
                 }
-                data-toggle="dropdown"
+                onClick={saveChanges}
               >
-                <span>הסר לקוח</span>
+                {props.patient ? "עדכן פרטים" : "הוסף לקוח"}
               </button>
-              <div className="dropdown-menu" style={{ minWidth: "0" }}>
+
+              <div className="d-inline">
                 <button
-                  className="dropdown-item text-center"
-                  onClick={handleDelete}
+                  className="btn btn-outline-danger mr-2"
+                  hidden={
+                    !props.role ||
+                    !props.deletePatient ||
+                    !props.patient ||
+                    (!props.role.deleteCustomer && !props.role.admin)
+                  }
+                  // data-toggle="dropdown"
+                  onClick={() =>
+                      promptConfirmation(
+                        `האם אתה בטוח שברצונך להסיר את ${props.patient.firstName} ${props.patient.lastName}?`,
+                        handleDelete
+                      )
+                    }
                 >
-                  <span className="font-weight-bold text-danger">הסר</span>
+                  <span>הסר לקוח</span>
                 </button>
+                <div className="dropdown-menu" style={{ minWidth: "0" }}>
+                  <button
+                    className="dropdown-item text-center"
+                    // onClick={handleDelete}
+                    onClick={() =>
+                      promptConfirmation(
+                        `האם אתה בטוח שברצונך להסיר את ${props.patient.firstName} ${props.patient.lastName}?`,
+                        handleDelete
+                      )
+                    }
+                  >
+                    <span className="font-weight-bold text-danger">הסר</span>
+                  </button>
+                </div>
               </div>
+
+              <button
+                className="btn btn-outline-secondary float-left"
+                onClick={props.hide}
+              >
+                סגור
+              </button>
             </div>
-
-            {/* <button
-              className="btn btn-outline-danger mr-2"
-              hidden={
-                !props.role ||
-                !props.deletePatient ||
-                !props.patient ||
-                (!props.role.deleteCustomer && !props.role.admin)
-              }
-              onClick={handleDelete}
-            >
-              <span>הסר לקוח</span>
-            </button> */}
-
-            <button
-              className="btn btn-outline-secondary float-left"
-              onClick={props.hide}
-            >
-              סגור
-            </button>
           </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 

@@ -1,9 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import DocFieldsModal from "./DocFieldsModal";
 
 function TemplateForm(props) {
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFieldsModal, setShowFieldsModal] = useState(false);
+  const [customFields, setCustomFields] = useState([
+    "שדה 1",
+    "שדה 2",
+    "שדה 3",
+    "שדה 4",
+  ]);
+  const CUSTOM_DOC_FIELDS_URL =
+    process.env.REACT_APP_BASE_API_URL + "doc-fields";
+
+  useEffect((fields) => {
+    props.user
+      .getIdToken(true)
+      .then(async (idToken) => {
+        props
+          .postRequestWithToken(CUSTOM_DOC_FIELDS_URL, idToken)
+          .then((fields) => {
+            if (fields && fields.length && fields.length === 4) {
+              setCustomFields(fields);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const calculateAge = () => {
     const ageDifMs = Date.now() - new Date(props.patient.birthDate).getTime();
@@ -26,10 +56,6 @@ function TemplateForm(props) {
     return `${date}/${month}/${year}`;
   };
 
-  const boxChecked = (bool) => {
-    return bool ? "☒" : "☐";
-  };
-
   const handleDocCreation = (event) => {
     event.preventDefault();
     setIsError(false);
@@ -49,9 +75,10 @@ function TemplateForm(props) {
       secondPhone: event.target.currentDate.secondPhone,
       city: event.target.currentDate.city,
       address: event.target.currentDate.address,
-    //   field1: event.target.field1.value,
-    //   field2: event.target.field2.value,
-    //   field3: event.target.field3.value,
+      fieldA: event.target.fieldA.value,
+      fieldB: event.target.fieldB.value,
+      fieldC: event.target.fieldC.value,
+      fieldD: event.target.fieldD.value,
     };
     // console.log(props.template);
     props.createDoc(formFields).then((result) => {
@@ -68,14 +95,67 @@ function TemplateForm(props) {
     });
   };
 
+  const editIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      className="bi bi-pencil-fill text-secondary"
+      viewBox="0 0 16 16"
+    >
+      <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z" />
+    </svg>
+  );
+
+  const handleHideFieldsModal = () => {
+    setShowFieldsModal(false);
+  };
+
+  const handleFieldsChange = (fields) => {
+    const data = {
+      fields: fields,
+    };
+    props.user
+      .getIdToken(true)
+      .then(async (idToken) => {
+        props
+          .patchRequestWithToken(CUSTOM_DOC_FIELDS_URL, idToken, data)
+          .then((fields) => {
+            if (fields && fields.length && fields.length === 4) {
+              setCustomFields(fields);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
   return (
     <>
+      <DocFieldsModal
+        show={showFieldsModal}
+        hide={handleHideFieldsModal}
+        customFields={customFields}
+        save={handleFieldsChange}
+      />
       <form className="d-inline" onSubmit={handleDocCreation}>
         <input
           className="btn btn-purple text-white mx-2 mx-md-4 my-2 my-md-0"
           type="submit"
           value="צור מסמך"
         />
+        <button
+          type="button"
+          className="btn shadow-none"
+          onClick={() => setShowFieldsModal(true)}
+        >
+          {editIcon}
+        </button>
         <a
           href={props.sharedLink}
           target="_blank"
@@ -248,33 +328,59 @@ function TemplateForm(props) {
               />
             </div>
           </div>
-          {/* <div className="col-12 px-4">
+          <div className="col-12 px-4">
             <hr />
-          </div> */}
-          {/* <div className="p-3 ">
-            <label className="normalLabelWidth d-block d-md-inline-block ml-3">
-              שדה1(FieldA)
-            </label>
-            <div className="normalInputSize d-inline-block">
-              <input name="field1" type="text" className="form-control" />
+          </div>
+          <div className="d-flex">
+            <div className="p-3">
+              <label className="ml-3 align-top" title="fieldA">
+                {customFields[0]}
+              </label>
+              <div className="d-inline-block">
+                <textArea
+                  name="fieldA"
+                  style={{ resize: "both" }}
+                  className="form-control"
+                ></textArea>
+              </div>
+            </div>
+            <div className="p-3">
+              <label className="ml-3 align-top" title="fieldB">
+                {customFields[1]}
+              </label>
+              <div className="d-inline-block">
+                <textArea
+                  name="fieldB"
+                  style={{ resize: "both" }}
+                  className="form-control"
+                ></textArea>
+              </div>
+            </div>
+            <div className="p-3">
+              <label className="ml-3 align-top" title="fieldC">
+                {customFields[2]}
+              </label>
+              <div className="d-inline-block">
+                <textArea
+                  name="fieldC"
+                  style={{ resize: "both" }}
+                  className="form-control"
+                ></textArea>
+              </div>
+            </div>
+            <div className="p-3">
+              <label className="ml-3 align-top" title="fieldD">
+                {customFields[3]}
+              </label>
+              <div className="d-inline-block">
+                <textArea
+                  name="fieldD"
+                  style={{ resize: "both" }}
+                  className="form-control"
+                ></textArea>
+              </div>
             </div>
           </div>
-          <div className="p-3 ">
-            <label className="normalLabelWidth d-block d-md-inline-block ml-3">
-              שדה2
-            </label>
-            <div className="normalInputSize d-inline-block">
-              <input name="field2" type="text" className="form-control" />
-            </div>
-          </div>
-          <div className="p-3 ">
-            <label className="normalLabelWidth d-block d-md-inline-block ml-3">
-              שדה3
-            </label>
-            <div className="normalInputSize d-inline-block">
-              <input name="field3" type="text" className="form-control" />
-            </div>
-          </div> */}
         </div>
       </form>
     </>

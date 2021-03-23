@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import DatePicker, { registerLocale } from "react-datepicker";
 import he from "date-fns/locale/he";
 import Select from "react-select";
+import ConfirmationModal from "../root/ConfirmationModal";
 
 registerLocale("he", he);
 
@@ -16,6 +17,8 @@ function CalendarEventModal(props) {
   const [eventId, setEventId] = useState(null);
   const [patient, setPatient] = useState("");
   const [patientEvent, setPatientEvent] = useState(false);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
 
   const successMessage = (
     <span className="text-success">אירוע נשמר בהצלחה</span>
@@ -108,7 +111,8 @@ function CalendarEventModal(props) {
     else if (!fullDay && startTime >= endTime)
       alert("מועד סיום צריך להיות אחרי מועד ההתחלה");
     else {
-      const patientId = patient && patient.value && patientEvent ? patient.value : "";
+      const patientId =
+        patient && patient.value && patientEvent ? patient.value : "";
       const eventObject = {
         summary: title,
         start: {},
@@ -149,7 +153,8 @@ function CalendarEventModal(props) {
     else if (!fullDay && startTime >= endTime)
       alert("מועד סיום צריך להיות אחרי מועד ההתחלה");
     else {
-      const patientId = patient && patient.value && patientEvent ? patient.value : "";
+      const patientId =
+        patient && patient.value && patientEvent ? patient.value : "";
       const eventObject = {
         summary: title,
         start: {
@@ -299,236 +304,288 @@ function CalendarEventModal(props) {
     });
   };
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
-    <Modal onHide={props.hide} show={props.show} className="text-right">
-      <div
-        className="modal-content pt-2 pb-4 px-3"
-        style={{ backgroundColor: "#f4f5f7" }}
+    <>
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
+      <Modal
+        onHide={props.hide}
+        show={props.show && !confirmationText}
+        className="text-right"
       >
-        <div name="modalHeader" className="d-flex">
-          <div className="flex-grow-1">
-            <textarea
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              rows={1}
-              className="mt-4 eventTitle border-top-0 border-left-0 border-right-0 bg-transparent overflow-hidden m-2 shadow-none w-100"
-              style={{ fontWeight: "500", resize: "none", outline: "none" }}
-              placeholder="הוסף כותרת"
-            ></textarea>
-          </div>
-          <div>
-            <button
-              className="btn button-link py-0 px-1 mr-3 shadow-none text-muted"
-              onClick={props.hide}
-            >
-              <h4>&times;</h4>
-            </button>
-          </div>
-        </div>
-        <div name="modalBody">
-          <div name="eventDate" className="eventDate mb-4">
-            <div className="my-2">
-              <span className="d-inline-block modalIconWidth">{clockIcon}</span>
-              <h6 className="d-inline-block">זמן</h6>
-            </div>
-            <div className="mr-md-4 d-block d-md-flex">
-              <div>
-                <DatePicker
-                  selected={new Date(startTime)}
-                  onChange={(newDate) => updateStartTime(newDate)}
-                  locale="he"
-                  showTimeSelect={!fullDay}
-                  timeIntervals={15}
-                  timeFormat="HH:mm"
-                  timeCaption="זמן"
-                  dateFormat={!fullDay ? "eeee, LLLL d , k:mm" : "eeee, LLLL d"}
-                  popperModifiers={{
-                    preventOverflow: {
-                      enabled: true,
-                      escapeWithReference: false,
-                      boundariesElement: "viewport",
-                    },
-                  }}
-                  className="text-center datePicker fontSmall w-100 bg-transparent border-top-0 border-left-0 border-right-0 outline-none pointer"
-                />
-              </div>
-              <div className="my-2 my-md-0">
-                <span className="mx-2 fontSmall">עד</span>
-              </div>
-              <div>
-                <DatePicker
-                  selected={new Date(endTime)}
-                  onChange={(newDate) => setEndTime(newDate)}
-                  locale="he"
-                  showTimeSelect={!fullDay}
-                  timeIntervals={15}
-                  timeFormat="HH:mm"
-                  timeCaption="זמן"
-                  dateFormat={!fullDay ? "eeee, LLLL d , k:mm" : "eeee, LLLL d"}
-                  popperModifiers={{
-                    preventOverflow: {
-                      enabled: true,
-                      escapeWithReference: false,
-                      boundariesElement: "viewport",
-                    },
-                  }}
-                  className="text-center datePicker fontSmall w-100 bg-transparent border-top-0 border-left-0 border-right-0 outline-none pointer"
-                />
-              </div>
-            </div>
-            <input
-              id="fullDay"
-              type="checkbox"
-              className="mr-md-4 ml-2 mt-3 pointer"
-              onChange={toggleFullDay}
-              checked={fullDay}
-            ></input>
-            <label htmlFor="fullDay">
-              <small>יום מלא</small>
-            </label>
-          </div>
-          <div name="eventDescription" className="mb-4">
-            <div className="my-2">
-              <span className="d-inline-block modalIconWidth">
-                {detailsIcon}
-              </span>
-              <h6 className="d-inline-block">תיאור האירוע</h6>
-            </div>
-            <div className="modalTextPadding pl-3">
+        <div
+          className="modal-content pt-2 pb-4 px-3"
+          style={{ backgroundColor: "#f4f5f7" }}
+        >
+          <div name="modalHeader" className="d-flex">
+            <div className="flex-grow-1">
               <textarea
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                rows={5}
-                className="outline-none rounded border-0 w-100"
-                style={{ backgroundColor: "#f0f0f0", fontSize: "0.9rem" }}
-                placeholder="הוסף תיאור"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                rows={1}
+                className="mt-4 eventTitle border-top-0 border-left-0 border-right-0 bg-transparent overflow-hidden m-2 shadow-none w-100"
+                style={{ fontWeight: "500", resize: "none", outline: "none" }}
+                placeholder="הוסף כותרת"
               ></textarea>
             </div>
-          </div>
-
-          <div name="patient" className="my-4">
-            <div className="my-2">
-              <span className="d-inline-block modalIconWidth">{labelIcon}</span>
-              <h6 className="d-inline-block">לקוח</h6>
-              <div class="custom-control custom-switch d-inline mr-2">
-                <input
-                  type="checkbox"
-                  class="custom-control-input shadow-none"
-                  id="patientSwitch"
-                  checked={patientEvent}
-                  disabled={
-                    (!props.event && props.patient) ||
-                    (props.event && props.event.patientId)
-                  }
-                  onChange={() => setPatientEvent(!patientEvent)}
-                />
-                <label class="custom-control-label" for="patientSwitch"></label>
-              </div>
-            </div>
-            <div className="modalTextPadding" hidden={!patientEvent}>
-              <div style={{ width: "17rem" }}>
-                <Select
-                  placeholder="בחר..."
-                  className="basic-single "
-                  value={patient || null}
-                  isRtl={true}
-                  isSearchable={true}
-                  isDisabled={
-                    (!props.event && props.patient) ||
-                    (props.event && props.event.patientId)
-                  }
-                  options={props.patients}
-                  onChange={handlePatientChange}
-                />
-              </div>
+            <div>
+              <button
+                className="btn button-link py-0 px-1 mr-3 shadow-none text-muted"
+                onClick={props.hide}
+              >
+                <h4>&times;</h4>
+              </button>
             </div>
           </div>
-
-          <div name="calendarID" className="my-2">
-            <div className="my-2">
-              <span className="d-inline-block modalIconWidth">{labelIcon}</span>
-              <h6 className="d-inline-block">יומן</h6>
+          <div name="modalBody">
+            <div name="eventDate" className="eventDate mb-4">
+              <div className="my-2">
+                <span className="d-inline-block modalIconWidth">
+                  {clockIcon}
+                </span>
+                <h6 className="d-inline-block">זמן</h6>
+              </div>
+              <div className="mr-md-4 d-block d-md-flex">
+                <div>
+                  <DatePicker
+                    selected={new Date(startTime)}
+                    onChange={(newDate) => updateStartTime(newDate)}
+                    locale="he"
+                    showTimeSelect={!fullDay}
+                    timeIntervals={15}
+                    timeFormat="HH:mm"
+                    timeCaption="זמן"
+                    dateFormat={
+                      !fullDay ? "eeee, LLLL d , k:mm" : "eeee, LLLL d"
+                    }
+                    popperModifiers={{
+                      preventOverflow: {
+                        enabled: true,
+                        escapeWithReference: false,
+                        boundariesElement: "viewport",
+                      },
+                    }}
+                    className="text-center datePicker fontSmall w-100 bg-transparent border-top-0 border-left-0 border-right-0 outline-none pointer"
+                  />
+                </div>
+                <div className="my-2 my-md-0">
+                  <span className="mx-2 fontSmall">עד</span>
+                </div>
+                <div>
+                  <DatePicker
+                    selected={new Date(endTime)}
+                    onChange={(newDate) => setEndTime(newDate)}
+                    locale="he"
+                    showTimeSelect={!fullDay}
+                    timeIntervals={15}
+                    timeFormat="HH:mm"
+                    timeCaption="זמן"
+                    dateFormat={
+                      !fullDay ? "eeee, LLLL d , k:mm" : "eeee, LLLL d"
+                    }
+                    popperModifiers={{
+                      preventOverflow: {
+                        enabled: true,
+                        escapeWithReference: false,
+                        boundariesElement: "viewport",
+                      },
+                    }}
+                    className="text-center datePicker fontSmall w-100 bg-transparent border-top-0 border-left-0 border-right-0 outline-none pointer"
+                  />
+                </div>
+              </div>
+              <input
+                id="fullDay"
+                type="checkbox"
+                className="mr-md-4 ml-2 mt-3 pointer"
+                onChange={toggleFullDay}
+                checked={fullDay}
+              ></input>
+              <label htmlFor="fullDay">
+                <small>יום מלא</small>
+              </label>
             </div>
-            <div className="modalTextPadding">
-              <div className="dropdown d-inline-block">
-                <button
-                  className="btn dropdown-toggle p-0 shadow-none"
-                  type="button"
-                  data-toggle="dropdown"
-                  disabled={props.event}
-                >
-                  <span className="pl-2">
-                    {calendar.displayName || "בחר יומן"}
-                  </span>
-                </button>
-                <div className="dropdown-menu dropdown-menu-right text-right">
-                  {props.role &&
-                    calendars.flatMap((cal, index) => {
-                      if (
-                        (cal.name === "main" &&
-                          !props.role.addCalendarEvents && !props.role.admin) ||
-                        (cal.name === "second" &&
-                          !props.role.addSecondCalendarEvents && !props.role.admin) ||
-                        (cal.name === "third" &&
-                          !props.role.addThirdCalendarEvents && !props.role.admin)
-                      ) {
-                        return [];
-                      }
-                      return [
-                        <button
-                          key={index}
-                          className={"dropdown-item"}
-                          onClick={(e) => setCalendar(cal)}
-                        >
-                          {cal.displayName}
-                        </button>,
-                      ];
-                    })}
+            <div name="eventDescription" className="mb-4">
+              <div className="my-2">
+                <span className="d-inline-block modalIconWidth">
+                  {detailsIcon}
+                </span>
+                <h6 className="d-inline-block">תיאור האירוע</h6>
+              </div>
+              <div className="modalTextPadding pl-3">
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  rows={5}
+                  className="outline-none rounded border-0 w-100"
+                  style={{ backgroundColor: "#f0f0f0", fontSize: "0.9rem" }}
+                  placeholder="הוסף תיאור"
+                ></textarea>
+              </div>
+            </div>
+
+            <div name="patient" className="my-4">
+              <div className="my-2">
+                <span className="d-inline-block modalIconWidth">
+                  {labelIcon}
+                </span>
+                <h6 className="d-inline-block">לקוח</h6>
+                <div class="custom-control custom-switch d-inline mr-2">
+                  <input
+                    type="checkbox"
+                    class="custom-control-input shadow-none"
+                    id="patientSwitch"
+                    checked={patientEvent}
+                    disabled={
+                      (!props.event && props.patient) ||
+                      (props.event && props.event.patientId)
+                    }
+                    onChange={() => setPatientEvent(!patientEvent)}
+                  />
+                  <label
+                    class="custom-control-label"
+                    for="patientSwitch"
+                  ></label>
+                </div>
+              </div>
+              <div className="modalTextPadding" hidden={!patientEvent}>
+                <div style={{ width: "17rem" }}>
+                  <Select
+                    placeholder="בחר..."
+                    className="basic-single "
+                    value={patient || null}
+                    isRtl={true}
+                    isSearchable={true}
+                    isDisabled={
+                      (!props.event && props.patient) ||
+                      (props.event && props.event.patientId)
+                    }
+                    options={props.patients}
+                    onChange={handlePatientChange}
+                  />
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            className="mb-2 mt-3 text-center"
-            hidden={
-              !props.role ||
-              (props.event &&
-                !props.role.addCalendarEvents &&
-                props.event.calendar === "main") ||
-              (props.event &&
-                !props.role.addSecondCalendarEvents &&
-                props.event.calendar === "second") ||
-              (props.event &&
-                !props.role.addThirdCalendarEvents &&
-                props.event.calendar === "third")
-            }
-          >
-            <button
-              hidden={eventId}
-              className="btn btn-primary text-white"
-              onClick={createEvent}
+            <div name="calendarID" className="my-2">
+              <div className="my-2">
+                <span className="d-inline-block modalIconWidth">
+                  {labelIcon}
+                </span>
+                <h6 className="d-inline-block">יומן</h6>
+              </div>
+              <div className="modalTextPadding">
+                <div className="dropdown d-inline-block">
+                  <button
+                    className="btn dropdown-toggle p-0 shadow-none"
+                    type="button"
+                    data-toggle="dropdown"
+                    disabled={props.event}
+                  >
+                    <span className="pl-2">
+                      {calendar.displayName || "בחר יומן"}
+                    </span>
+                  </button>
+                  <div className="dropdown-menu dropdown-menu-right text-right">
+                    {props.role &&
+                      calendars.flatMap((cal, index) => {
+                        if (
+                          (cal.name === "main" &&
+                            !props.role.addCalendarEvents &&
+                            !props.role.admin) ||
+                          (cal.name === "second" &&
+                            !props.role.addSecondCalendarEvents &&
+                            !props.role.admin) ||
+                          (cal.name === "third" &&
+                            !props.role.addThirdCalendarEvents &&
+                            !props.role.admin)
+                        ) {
+                          return [];
+                        }
+                        return [
+                          <button
+                            key={index}
+                            className={"dropdown-item"}
+                            onClick={(e) => setCalendar(cal)}
+                          >
+                            {cal.displayName}
+                          </button>,
+                        ];
+                      })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="mb-2 mt-3 text-center"
+              hidden={
+                !props.role ||
+                (props.event &&
+                  !props.role.admin &&
+                  !props.role.addCalendarEvents &&
+                  props.event.calendar === "main") ||
+                (props.event &&
+                  !props.role.admin &&
+                  !props.role.addSecondCalendarEvents &&
+                  props.event.calendar === "second") ||
+                (props.event &&
+                  !props.role.admin &&
+                  !props.role.addThirdCalendarEvents &&
+                  props.event.calendar === "third")
+              }
             >
-              צור אירוע
-            </button>
-            <button
-              hidden={!eventId}
-              className="btn btn-primary text-white"
-              onClick={updateEvent}
-            >
-              עדכן אירוע
-            </button>
-            <button
-              hidden={!eventId}
-              className="mr-3 btn btn-outline-danger"
-              onClick={deleteEvent}
-            >
-              מחק אירוע
-            </button>
+              <button
+                hidden={eventId}
+                className="btn btn-primary text-white"
+                onClick={createEvent}
+              >
+                צור אירוע
+              </button>
+              <button
+                hidden={!eventId}
+                className="btn btn-primary text-white"
+                onClick={updateEvent}
+              >
+                עדכן אירוע
+              </button>
+              <button
+                hidden={!eventId}
+                className="mr-3 btn btn-outline-danger"
+                // onClick={deleteEvent}
+                onClick={() =>
+                  promptConfirmation(
+                    `האם אתה בטוח שברצונך להסיר את האירוע ${props.event.title}?`,
+                    deleteEvent
+                  )
+                }
+              >
+                מחק אירוע
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 

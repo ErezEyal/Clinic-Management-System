@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import TaskItem from "./TaskItem";
 import Select from "react-select";
 import "./tasks.css";
+import ConfirmationModal from "../root/ConfirmationModal";
 
 function TaskModal(props) {
   const [titleActive, setTitleActive] = useState(false);
@@ -17,6 +18,8 @@ function TaskModal(props) {
   const [task, setTask] = useState(null);
   const [patient, setPatient] = useState(null);
   const [patients, setPatients] = useState([]);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
 
   useEffect(() => {
     console.log("task props: ", props.task);
@@ -295,10 +298,32 @@ function TaskModal(props) {
 
   if (!task) return null;
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
+    <>
+    <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
     <Modal
       size="lg"
-      show={props.show}
+      show={props.show && !confirmationText}
       onHide={props.hide}
       animation={false}
       className="text-right"
@@ -468,7 +493,13 @@ function TaskModal(props) {
             <div className="d-sm-none"></div>
             <button
               className="btn btn-outline-danger mx-2 my-1 float-left"
-              onClick={handleDelete}
+              // onClick={handleDelete}
+              onClick={() =>
+                      promptConfirmation(
+                        `האם אתה בטוח שברצונך להסיר המטלה ${props.task.title}?`,
+                        handleDelete
+                      )
+                    }
               hidden={task.closedAt || !task._id}
             >
               מחק מטלה
@@ -491,6 +522,7 @@ function TaskModal(props) {
         </div>
       </div>
     </Modal>
+    </>
   );
 }
 

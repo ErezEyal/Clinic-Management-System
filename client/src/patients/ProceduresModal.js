@@ -1,8 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import ConfirmationModal from "../root/ConfirmationModal";
 
 function ProceduresModal(props) {
   const inputRef = useRef();
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
 
   const plusIcon = (
     <svg
@@ -38,50 +41,93 @@ function ProceduresModal(props) {
   );
 
   const handleAddition = (value) => {
-      if (value) {
-          props.updateProcedures(value, "add")
-          inputRef.current.value = ""
-      }
-  } 
+    if (value) {
+      props.updateProcedures(value, "add");
+      inputRef.current.value = "";
+    }
+  };
+
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
+  const handleHide = () => {
+    if (!confirmationText) {
+      props.hide();
+    }
+  };
 
   return (
-    <Modal onHide={props.hide} show={props.show} className="text-right">
-      <div className="modal-content p-4" style={{ backgroundColor: "#f4f5f7" }}>
-        <h4 className="mb-3">
-          <span>פעולות</span>
-        </h4>
-        <div>
-          <ul className="pr-0">
-            {props.procedures.map((procedure, index) => {
-              return (
-                <li className="my-1">
-                  <button
-                    className="btn pt-0"
-                    onClick={() => props.updateProcedures(procedure, "delete")}
-                  >
-                    {removeIcon}
-                  </button>
-                  <span>{procedure}</span>
-                </li>
-              );
-            })}
-            <li>
-              <input
-                placeholder="חדש..."
-                className="mr-3 bg-transparent border-bottom border-top-0 border-left-0 border-right-0 outline-none"
-                ref={inputRef}
-              ></input>
-              <button
-                className="btn shadow-none text-primary mr-2"
-                onClick={() => handleAddition(inputRef.current.value)}
-              >
-                {plusIcon}
-              </button>
-            </li>
-          </ul>
+    <>
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
+      <Modal
+        onHide={handleHide}
+        show={props.show && !confirmationText}
+        className="text-right"
+      >
+        <div
+          className="modal-content p-4"
+          style={{ backgroundColor: "#f4f5f7" }}
+        >
+          {/* <button className="btn btn-outline-info d-inline w-25 mx-auto">בדיקה</button> */}
+          <h4 className="mb-3">
+            <span>פעולות</span>
+          </h4>
+          <div>
+            <ul className="pr-0">
+              {props.procedures.map((procedure, index) => {
+                const text = `האם אתה בטוח שברצונך למחוק את ${procedure}?`;
+                return (
+                  <li className="my-1">
+                    <button
+                      className="btn pt-0"
+                      // onClick={() => props.updateProcedures(procedure, "delete")}
+                      onClick={() =>
+                        promptConfirmation(text, () =>
+                          props.updateProcedures(procedure, "delete")
+                        )
+                      }
+                    >
+                      {removeIcon}
+                    </button>
+                    <span>{procedure}</span>
+                  </li>
+                );
+              })}
+              <li>
+                <input
+                  placeholder="חדש..."
+                  className="mr-3 bg-transparent border-bottom border-top-0 border-left-0 border-right-0 outline-none"
+                  ref={inputRef}
+                ></input>
+                <button
+                  className="btn shadow-none text-primary mr-2"
+                  onClick={() => handleAddition(inputRef.current.value)}
+                >
+                  {plusIcon}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 

@@ -1,8 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import ConfirmationModal from "../root/ConfirmationModal";
 
 function PatientCategoriesModal(props) {
   const inputRef = useRef();
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
 
   const plusIcon = (
     <svg
@@ -44,8 +47,30 @@ function PatientCategoriesModal(props) {
       }
   } 
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
-    <Modal onHide={props.hide} show={props.show} className="text-right">
+    <>
+    <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
+    <Modal onHide={props.hide} show={props.show && !confirmationText} className="text-right">
       <div className="modal-content p-4" style={{ backgroundColor: "#f4f5f7" }}>
         <h4 className="mb-3">
           <span>שיוכים</span>
@@ -53,16 +78,21 @@ function PatientCategoriesModal(props) {
         <div>
           <ul className="pr-0">
             {props.categories.map((category, index) => {
+              const text = `האם אתה בטוח שברצונך למחוק את ${category}?`;
               return (
                 <li className="my-1">
                   <button
                     className="btn pt-0"
-                    onClick={() => props.updateCategories(category, "delete")}
+                    //onClick={() => props.updateCategories(category, "delete")}
+                    onClick={() =>
+                        promptConfirmation(text, () =>
+                          props.updateCategories(category, "delete")
+                        )
+                      }
                   >
                     {removeIcon}
                   </button>
                   <span>{category}</span>
-                  {/* <span hidden={index !== 0} className="fontSmall mr-2 text-secondary">(ברירת מחדל)</span> */}
                 </li>
               );
             })}
@@ -83,6 +113,7 @@ function PatientCategoriesModal(props) {
         </div>
       </div>
     </Modal>
+    </>
   );
 }
 

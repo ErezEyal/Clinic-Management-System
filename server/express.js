@@ -68,15 +68,19 @@ const permissions = {
   "/api/export-audit": 1,
   "/api/export-users": 1,
   "/api/patient-category": {
-    patch: "updateCustomer",
+    patch: "editPatientCategories",
   },
   "/api/procedure": {
-    patch: "updateCustomer",
+    patch: "editProcedures",
   },
   "/api/patient-categories": 1,
   "/api/procedures": 1,
   "/api/document": {
     post: "createDocs",
+  },
+  "/api/doc-fields": {
+    post: "createDocs",
+    patch: "createDocs",
   },
   "/api/users": 1,
   "/api/user": {
@@ -471,10 +475,10 @@ const getRoles = () => {
   return db.collection("roles").find().toArray();
 };
 
-const newRole = () => {
+const newRole = (name) => {
   return db
     .collection("roles")
-    .insertOne({ name: "תפקיד-חדש" })
+    .insertOne({ name: name })
     .then((res) => {
       if (res.insertedCount) {
         return true;
@@ -1219,6 +1223,33 @@ const createPatientDPFolder = (patient) => {
       console.error(error);
       return false;
     });
+};
+
+const getCustomDocFields = () => {
+  return db
+    .collection("customDocFields")
+    .findOne({})
+    .then((fields) => {
+      if (!fields) return null;
+      return [fields.fieldA, fields.fieldB, fields.fieldC, fields.fieldD];
+    });
+};
+
+const updateCustomDocFields = (fields) => {
+  return db.collection("customDocFields").updateOne(
+    {},
+    {
+      $set: {
+        fieldA: fields.fieldA,
+        fieldB: fields.fieldB,
+        fieldC: fields.fieldC,
+        fieldD: fields.fieldD,
+      },
+    },
+    {
+      upsert: 1,
+    }
+  );
 };
 
 app.get("*", (req, res) => {
@@ -2093,7 +2124,7 @@ app.post("/api/roles", authorization, (req, res) => {
 });
 
 app.post("/api/role", authorization, (req, res) => {
-  newRole().then(() => {
+  newRole(req.body.roleName).then(() => {
     res.json({ result: "OK" });
 
     const details = " נוצר תפקיד מערכת חדש ";
@@ -2530,4 +2561,15 @@ app.post("/api/templates", authorization, async (req, res) => {
   });
 });
 
-// exports.app = functions.https.onRequest(app);
+app.post("/api/doc-fields", authorization, async (req, res) => {
+  getCustomDocFields().then((fields) => {
+    res.json(fields);
+  });
+});
+
+app.patch("/api/doc-fields", authorization, async (req, res) => {
+  await updateCustomDocFields(req.body.fields);
+  getCustomDocFields().then((fields) => {
+    res.json(fields);
+  });
+});

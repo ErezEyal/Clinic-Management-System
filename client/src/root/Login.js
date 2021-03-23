@@ -1,4 +1,3 @@
-// import './../App.css';
 import { Form, Col, Row, Button } from 'react-bootstrap';
 import { auth } from '../firebase.js';
 import { useRef, useState } from 'react';

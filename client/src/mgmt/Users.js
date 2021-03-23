@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FormControl, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
+import ConfirmationModal from "../root/ConfirmationModal";
 import UserModal from "./UserModal";
 // import UserModal from '../users/UserModal';
 
@@ -15,6 +16,8 @@ function Users(props) {
   const [displayUserModal, setDisplayUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState({});
   const [roles, setRoles] = useState([]);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
   const USERS_URL = process.env.REACT_APP_BASE_API_URL + "users";
   const USER_URL = process.env.REACT_APP_BASE_API_URL + "user";
   const ROLES_URL = process.env.REACT_APP_BASE_API_URL + "roles";
@@ -178,11 +181,7 @@ function Users(props) {
     let tableRows = filteredUsers.map((user, index) => {
       // this func should not handle filtering
       return (
-        <tr
-          key={index}
-          className="usersTableRow"
-          style={{ color: "#007A8C" }}
-        >
+        <tr key={index} className="usersTableRow" style={{ color: "#007A8C" }}>
           <td
             className="firstColumnWidth position-absolute pr-lg-4"
             style={{ right: "0px" }}
@@ -219,7 +218,16 @@ function Users(props) {
               </span>
 
               <div className="d-inline">
-                <span className="pointer mx-2" data-toggle="dropdown">
+                <span
+                  className="pointer mx-2"
+                  // data-toggle="dropdown"
+                  onClick={() =>
+                    promptConfirmation(
+                      `האם אתה בטוח שברצונך למחוק את ${user.name}?`,
+                      () => deleteUser(user)
+                    )
+                  }
+                >
                   {removeIcon}
                 </span>
                 <div className="dropdown-menu" style={{ minWidth: "0" }}>
@@ -407,8 +415,29 @@ function Users(props) {
     });
   };
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
     <>
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
       <UserModal
         show={displayUserModal}
         hide={hideUserModal}

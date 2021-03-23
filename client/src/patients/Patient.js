@@ -299,6 +299,7 @@ function Patient(props) {
             <Templates
               patient={props.patient}
               postRequestWithToken={props.postRequestWithToken}
+              patchRequestWithToken={props.patchRequestWithToken}
               user={props.user}
               docCreated={handleDocCreated}
               templates={templates}

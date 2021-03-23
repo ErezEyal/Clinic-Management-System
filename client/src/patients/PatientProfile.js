@@ -112,7 +112,9 @@ function PatientProfile(props) {
           </div>
           <div className="my-3 col-sm-6" hidden={!props.patient.passport}>
             <span className="d-block my-1 text-secondary">מספר דרכון</span>
-            <span>{props.patient.passport || "--"}</span>
+            <span>
+              {(props.patient.usePassport && props.patient.passport) || "--"}
+            </span>
           </div>
           <div className="my-3 col-sm-6">
             <span className="d-block my-1 text-secondary">שיוך</span>

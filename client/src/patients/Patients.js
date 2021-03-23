@@ -417,9 +417,9 @@ function Patients(props) {
               dir="ltr"
               className="pointer"
               onClick={() => showPatientModal(patient)}
-              title={patient.passport}
+              title={patient.usePassport ? patient.passport : ""}
             >
-              {patient.passport}
+              {patient.usePassport ? patient.passport : ""}
             </span>
           </td>
 
@@ -482,7 +482,7 @@ function Patients(props) {
             </span>
           </th>
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("id")}
           >
@@ -501,7 +501,7 @@ function Patients(props) {
             </span>
           </th>
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("phone")}
           >
@@ -520,7 +520,7 @@ function Patients(props) {
             </span>
           </th>
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("category")}
           >
@@ -540,7 +540,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("birthDate")}
           >
@@ -560,7 +560,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("city")}
           >
@@ -580,7 +580,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("address")}
           >
@@ -600,7 +600,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("email")}
           >
@@ -620,7 +620,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("procedures")}
           >
@@ -640,7 +640,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("comment")}
           >
@@ -660,7 +660,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("gender")}
           >
@@ -680,7 +680,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("passport")}
           >
@@ -700,7 +700,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("bool1")}
           >
@@ -720,7 +720,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("bool2")}
           >
@@ -740,7 +740,7 @@ function Patients(props) {
           </th>
 
           <th
-            className="border font-weight-normal pointer patientsHeaderCell shadow-sm"
+            className="border font-weight-normal pointer patientsHeaderCell shadow-sm noselect"
             style={{ width: "10rem" }}
             onClick={() => handleSorting("bool3")}
           >
@@ -975,18 +975,24 @@ function Patients(props) {
           </div>
           <div className="d-inline-block float-sm-left mt-2 mt-sm-0">
             <button
-              className="btn btn-purple-outline"
+              className="btn btn-purple-outline mx-1"
+              hidden={
+                !props.role || (!props.role.editProcedures && !props.role.admin)
+              }
               onClick={() => showProceduresModal()}
             >
               פעולות
             </button>
             <button
-              className="btn btn-purple-outline mx-2"
+              className="btn btn-purple-outline mx-1"
+              hidden={
+                !props.role || (!props.role.editPatientCategories && !props.role.admin)
+              }
               onClick={() => showPatientCategoriesModal()}
             >
               שיוכים
             </button>
-            <button onClick={handleExport} className="btn btn-purple-outline">
+            <button onClick={handleExport} className="btn btn-purple-outline mx-1">
               ייצוא
             </button>
             <button

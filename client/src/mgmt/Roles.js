@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FormControl, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
+import ConfirmationModal from "../root/ConfirmationModal";
+import NewRoleModal from "./NewRoleModal";
 
 function Roles(props) {
   const [roles, setRoles] = useState([]);
@@ -10,6 +12,9 @@ function Roles(props) {
   const [searchFocus, setSearchFocus] = useState(false);
   const [filter, setFilter] = useState("");
   const [editRole, setEditRole] = useState(-1);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
+  const [showNewRoleModal, setShowNewRoleModal] = useState(false);
   const ROLES_URL = process.env.REACT_APP_BASE_API_URL + "roles";
   const ROLE_URL = process.env.REACT_APP_BASE_API_URL + "role";
 
@@ -29,6 +34,8 @@ function Roles(props) {
     "viewPhotos",
     "createDocs",
     "createImportantDocs",
+    "editProcedures",
+    "editPatientCategories",
   ];
 
   const searchIcon = (
@@ -173,7 +180,7 @@ function Roles(props) {
             className="pr-lg-4 firstColumnWidth position-absolute bg-white overflow-hidden"
             style={{ right: "0px" }}
           >
-            {getRoleNameInputTag(role)}
+            <span className="noselect">{role.name}</span>
           </td>
           {permissions.map((permission) => {
             return (
@@ -197,15 +204,22 @@ function Roles(props) {
           })}
           <td>
             <div className="text-center">
-              <span
+              <button
+                disabled={props.role.name === role.name}
                 className={
-                  "pointer mx-2 " + (role.admin ? "d-none" : "d-inline")
+                  "btn p-0 shadow-none pointer mx-2 " +
+                  (role.admin ? "d-none" : "d-inline")
                 }
-                onClick={() => setEditRole(index)}
-                data-toggle="dropdown"
+                onClick={() =>
+                  promptConfirmation(
+                    `האם אתה בטוח שברצונך למחוק את התפקיד ${role.name}?`,
+                    () => handleRoleRemoval(role)
+                  )
+                }
+                // data-toggle="dropdown"
               >
-                {removeIcon}
-              </span>
+                <span>{removeIcon}</span>
+              </button>
               <div className="dropdown-menu" style={{ minWidth: "0" }}>
                 <button
                   className="dropdown-item text-center"
@@ -229,50 +243,107 @@ function Roles(props) {
           >
             תפקיד
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             ניהול משתמשים
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה בלוגים
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             עדכון פרטי לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             מחיקת רשומת לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             הוספת רשומת לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה ביומן ראשי
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה ביומן ניתוחים
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה ביומן שלישי
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             עריכת יומן ראשי
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             עריכת יומן ניתוחים
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             עריכת יומן שלישי
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה במסמכי לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             צפייה בתמונות לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "12rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "12rem" }}
+          >
             יצירת מסמכי לקוח
           </th>
-          <th className="border font-weight-normal shadow-sm" style={{ minWidth: "13rem" }}>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "13rem" }}
+          >
             יצירת מסמכי לקוח מסווגים
+          </th>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "13rem" }}
+          >
+            עריכת רשימת פעולות
+          </th>
+          <th
+            className="border font-weight-normal shadow-sm"
+            style={{ minWidth: "13rem" }}
+          >
+            עריכת רשימת שיוכים
           </th>
           <th
             className="border font-weight-normal shadow-sm "
@@ -381,12 +452,15 @@ function Roles(props) {
     setSearchFocus(!searchFocus);
   };
 
-  const handleNewRole = () => {
+  const handleNewRole = (name) => {
+    const data = {
+      roleName: name,
+    };
     props.user
       .getIdToken(true)
       .then((idToken) => {
         props
-          .postRequestWithToken(ROLE_URL, idToken)
+          .postRequestWithToken(ROLE_URL, idToken, data)
           .then(() => {
             fetchRoles();
           })
@@ -397,8 +471,38 @@ function Roles(props) {
       });
   };
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleHideNewRoleModal = () => {
+    setShowNewRoleModal(false);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
     <>
+      <NewRoleModal
+        show={showNewRoleModal}
+        hide={handleHideNewRoleModal}
+        save={handleNewRole}
+      />
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
       <div
         className="container-fluid my-4 mx-md-5 text-right"
         style={{ maxWidth: "95vw" }}
@@ -409,10 +513,10 @@ function Roles(props) {
             <h6 className="text-secondary mb-0">{roles.length} תפקידים</h6>
           </div>
           <div className="d-inline-block float-sm-left mt-2 mt-sm-0">
-            <button className="btn btn-purple-outline">ייצוא</button>
+            {/* <button className="btn btn-purple-outline">ייצוא</button> */}
             <button
               className="btn mx-2 btn-purple text-white"
-              onClick={handleNewRole}
+              onClick={() => setShowNewRoleModal(true)}
             >
               תפקיד חדש
             </button>

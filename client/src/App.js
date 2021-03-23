@@ -347,6 +347,7 @@ function App() {
               postRequestWithToken={postRequestWithToken}
               patchRequestWithToken={patchRequestWithToken}
               deleteRequestWithToken={deleteRequestWithToken}
+              role={role}
             />
           </ProtectedRoute>
 

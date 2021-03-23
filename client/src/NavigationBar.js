@@ -89,6 +89,7 @@ function NavigationBar(props) {
           >
             <NavDropdown.Item
               href="/signup"
+              className="text-right"
               hidden={
                 !props.role || (!props.role.manageUsers && !props.role.admin)
               }
@@ -97,6 +98,7 @@ function NavigationBar(props) {
             </NavDropdown.Item>
             <NavDropdown.Item
               href="/users"
+              className="text-right"
               hidden={
                 !props.role || (!props.role.manageUsers && !props.role.admin)
               }
@@ -105,6 +107,7 @@ function NavigationBar(props) {
             </NavDropdown.Item>
             <NavDropdown.Item
               href="/roles"
+              className="text-right"
               hidden={
                 !props.role || (!props.role.manageUsers && !props.role.admin)
               }
@@ -113,6 +116,7 @@ function NavigationBar(props) {
             </NavDropdown.Item>
             <NavDropdown.Item
               href="/audit"
+              className="text-right"
               hidden={
                 !props.role || (!props.role.viewLogs && !props.role.admin)
               }
@@ -128,6 +132,7 @@ function NavigationBar(props) {
                 className="rounded-circle ml-2 mr-0"
                 width="32px"
                 height="32px"
+                alt="profile"
                 src={props.userPhoto ? props.userPhoto : "/unknown.png"}
               />
               <NavDropdown

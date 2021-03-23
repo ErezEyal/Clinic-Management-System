@@ -12,6 +12,7 @@ function Timeline(props) {
   const [otherFilter, setOtherFilter] = useState(true);
   const [taskFilter, setTaskFilter] = useState(true);
   const [displayFilters, setDisplayFilters] = useState(false);
+  const [filtersToggle, setFiltersToggle] = useState(true);
   const PATIENT_EVENT_URL =
     process.env.REACT_APP_BASE_API_URL + "patient-event";
 
@@ -103,7 +104,6 @@ function Timeline(props) {
       const dayString = Object.keys(day)[0];
       // const daySpanTag = <span className="text-info">{dayString}</span>
       const events = day[dayString].flatMap((event, index) => {
-        // console.log("event", event);
         if (event.template === "שיחה עם לקוח" && !patientCallFilter) {
           return [];
         } else if (event.template === "סיכום פגישה" && !meetingSummaryFilter) {
@@ -141,6 +141,25 @@ function Timeline(props) {
     return days;
   };
 
+  const handleFiltersToggle = () => {
+    if (filtersToggle) {
+      setTaskFilter(false);
+      setOtherFilter(false);
+      setMeetingScheduleFilter(false);
+      setProcedureFilter(false);
+      setPatientCallFilter(false);
+      setMeetingSummaryFilter(false);
+    } else {
+      setTaskFilter(true);
+      setOtherFilter(true);
+      setMeetingScheduleFilter(true);
+      setProcedureFilter(true);
+      setPatientCallFilter(true);
+      setMeetingSummaryFilter(true);
+    }
+    setFiltersToggle(!filtersToggle);
+  };
+
   return (
     <div>
       <PatientEventModal
@@ -165,6 +184,13 @@ function Timeline(props) {
                 <b>סינון</b>
               </button>
             </span>
+            <button
+              hidden={!displayFilters}
+              className="mx-1 btn p-0 text-muted fontSmall shadow-none"
+              onClick={handleFiltersToggle}
+            >
+              {filtersToggle ? "הסתר הכל" : "הצג הכל"}
+            </button>
           </div>
           <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
             <input
@@ -216,8 +242,11 @@ function Timeline(props) {
           </div>
         </div>
         <div className="flex-shrink-0">
-          <button className="btn btn-outline-info py-0 px-2 ml-2" onClick={showEventModal}>
-            הוסף 
+          <button
+            className="btn btn-outline-info py-0 px-2 ml-2"
+            onClick={showEventModal}
+          >
+            הוסף
           </button>
         </div>
       </div>

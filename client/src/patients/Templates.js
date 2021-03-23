@@ -8,9 +8,9 @@ function Templates(props) {
 
   useEffect(() => {
     if (!template && props.templates) {
-        setTemplate(props.templates[0])
+      setTemplate(props.templates[0]);
     }
-  }, [props])
+  }, [props]);
 
   const createDoc = useCallback(
     async (fields) => {
@@ -28,32 +28,31 @@ function Templates(props) {
             .then((result) => {
               if (result.success) {
                 console.log(result);
-                setSharedLink(result.link)
+                setSharedLink(result.link);
                 success = true;
               } else {
                 success = false;
-                setSharedLink("")
+                setSharedLink("");
               }
             })
             .catch((error) => {
               console.log(error);
               success = false;
-              setSharedLink("")
+              setSharedLink("");
             });
         })
         .catch((error) => {
           console.log(error);
           success = false;
-          setSharedLink("")
+          setSharedLink("");
         });
-    //   setTimeout(() => {
-    //     if (success) props.docCreated();
-    //   }, 1800);
+      //   setTimeout(() => {
+      //     if (success) props.docCreated();
+      //   }, 1800);
       return success;
     },
     [DOCUMENT_URL, props, template]
   );
-
 
   return (
     <div>
@@ -70,7 +69,14 @@ function Templates(props) {
             );
           })}
       </select>
-      <TemplateForm createDoc={createDoc} patient={props.patient} sharedLink={sharedLink || "#"} />
+      <TemplateForm
+        createDoc={createDoc}
+        patient={props.patient}
+        sharedLink={sharedLink || "#"}
+        postRequestWithToken={props.postRequestWithToken}
+        patchRequestWithToken={props.patchRequestWithToken}
+        user={props.user}
+      />
     </div>
   );
 }
