@@ -205,7 +205,7 @@ function Roles(props) {
           <td>
             <div className="text-center">
               <button
-                disabled={props.role.name === role.name}
+                // disabled={props.role.name === role.name}
                 className={
                   "btn p-0 shadow-none pointer mx-2 " +
                   (role.admin ? "d-none" : "d-inline")
