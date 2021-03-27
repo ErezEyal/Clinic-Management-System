@@ -158,19 +158,6 @@ function Roles(props) {
       });
   };
 
-  const getRoleNameInputTag = (role) => {
-    return (
-      <input
-        key={Date.now()}
-        defaultValue={role.name}
-        className="border-0 outline-none"
-        onBlur={(e) => handleRoleNameChange(e, role)}
-        style={{ color: "#007A8C" }}
-        readOnly={role.admin}
-      ></input>
-    );
-  };
-
   useEffect(() => {
     let tableRows = filteredRoles.map((role, index) => {
       return (
@@ -377,34 +364,6 @@ function Roles(props) {
       .catch(function (error) {
         console.log(error);
       });
-  };
-
-  const handleRoleNameChange = (e, role) => {
-    if (e.target.value !== role.name) {
-      if (!props.user) {
-        return;
-      }
-      const data = {
-        roleId: role._id,
-        permission: {
-          name: e.target.value,
-        },
-      };
-      props.user
-        .getIdToken(true)
-        .then((idToken) => {
-          props
-            .patchRequestWithToken(ROLE_URL, idToken, data)
-            .then((roles) => {
-              setRoles(roles);
-              setFilteredRoles(roles);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-    }
   };
 
   const handlePermissionChange = (role, permission) => {

@@ -386,7 +386,7 @@ function Calendar(props) {
       <div
         className={(sizeSmall ? "mt-2" : "mt-4") + " mx-auto text-right"}
         id="calendarArea"
-        style={{ width: "95%" }}
+        style={{ width: "95%", height: "90%" }}
         hidden={isLoading}
       >
         <CalendarEventModal
@@ -466,7 +466,7 @@ function Calendar(props) {
               onChange={(e) => setListDays(parseInt(e.target.value))}
               value={listDays.toString()}
               class="custom-select d-inline-block pr-4"
-              style={{ width: "9rem", paddingRight: 0 }}
+              style={{ width: "7rem", paddingRight: 0 }}
             >
               <option value="7">שבוע</option>
               <option value="14">שבועיים</option>

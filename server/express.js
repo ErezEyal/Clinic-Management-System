@@ -1204,10 +1204,12 @@ const setNewPatientTaskEvents = async (previousTask, newTask, userName) => {
 
 const createPatientDPFolder = (patient) => {
   let folderName;
-  if (patient.id) {
+  if (patient.id && !patient.usePassport) {
     folderName = `${patient.firstName} ${patient.lastName} - ${patient.id}`;
-  } else if (patient.passport) {
+  } else if (patient.passport && patient.usePassport) {
     folderName = `${patient.firstName} ${patient.lastName} - ${patient.passport}`;
+  } else {
+    return;
   }
   const params = {
     path: "/מסמכי לקוח/" + folderName,
@@ -1864,13 +1866,13 @@ app.post("/api/patient", authorization, async (req, res) => {
   if (req.body.patient.usePassport) {
     existingPatient = await db.collection("patients").findOne({
       $or: [
-        { id: req.body.patient.id },
-        { passport: req.body.patient.passport },
+        { id: { $eq: req.body.patient.id, $ne: "" } },
+        { passport: req.body.patient.passport, usePassport: true },
       ],
     });
   } else {
     existingPatient = await db.collection("patients").findOne({
-      id: req.body.patient.id,
+      id: { $eq: req.body.patient.id, $ne: "" },
     });
   }
 
@@ -1972,7 +1974,7 @@ app.put("/api/patient", authorization, async (req, res) => {
     });
   } else {
     existingPatient = await db.collection("patients").findOne({
-      id: req.body.patient.id,
+      id: { $eq: req.body.patient.id, $ne: "" },
       _id: { $ne: ObjectId(patientObjectId) },
     });
   }
@@ -2235,12 +2237,25 @@ app.post("/api/role-permissions", authorization, (req, res) => {
 });
 
 app.post("/api/timeline", authorization, (req, res) => {
+  const dayStrings = {
+    0: "יום ראשון",
+    1: "יום שני",
+    2: "יום שלישי",
+    3: "יום רביעי",
+    4: "יום חמישי",
+    5: "יום שישי",
+    6: "יום שבת",
+  };
+
   getPatientEvents(req.body.patientId)
     .then((events) => {
       let timeline = [];
       const timelineObject = groupBy(events, (event) => {
         const date = new Date(event.date);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        const day = dayStrings[date.getDay()];
+        return `${day}, ${date.getDate()}/${
+          date.getMonth() + 1
+        }/${date.getFullYear()}`;
       });
       for (const day in timelineObject) {
         const dayObject = {};

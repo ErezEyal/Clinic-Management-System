@@ -246,13 +246,13 @@ function Patient(props) {
             activeTab={activeTab}
           />
           {activeTab === "calendar" ? (
-            <div className="">
+            <div className="h-100">
               <Calendar
                 user={props.user}
                 postRequestWithToken={props.postRequestWithToken}
                 patchRequestWithToken={props.patchRequestWithToken}
                 deleteRequestWithToken={props.deleteRequestWithToken}
-                maxHeight="75vh"
+                maxHeight="100%"
                 small={true}
                 role={props.role}
                 patient={{

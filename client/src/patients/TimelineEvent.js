@@ -1,7 +1,10 @@
 import { useState } from "react";
+import ConfirmationModal from "../root/ConfirmationModal";
 
 function TimelineEvent(props) {
   const [isHovered, setHover] = useState(false);
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState("");
 
   const xIcon = (
     <svg
@@ -112,8 +115,29 @@ function TimelineEvent(props) {
     </svg>
   );
 
+  const promptConfirmation = (text, action) => {
+    setConfirmationText(text);
+    setConfirmationAction(() => action);
+  };
+
+  const handleHideConf = () => {
+    setConfirmationText("");
+    setConfirmationAction(null);
+  };
+
+  const handleChangeConfirm = () => {
+    confirmationAction();
+    setConfirmationAction(null);
+    setConfirmationText("");
+  };
+
   return (
     <>
+      <ConfirmationModal
+        hide={handleHideConf}
+        text={confirmationText}
+        performAction={handleChangeConfirm}
+      />
       <div
         className={
           "d-flex flex-column border-right border shadow-sm pb-2 px-2 rounded-lg my-3 " +
@@ -126,14 +150,20 @@ function TimelineEvent(props) {
         <div name="taskCardBody">
           <div>
             <span
-              className="float-left text-danger ml-1 pointer"
+              className="float-left text-danger ml-2 mt-1 pointer"
               hidden={!props.role || !props.role.updateCustomer}
-              onClick={handleDeleteEvent}
+              // onClick={handleDeleteEvent}
+              onClick={() =>
+                promptConfirmation(
+                  `האם אתה בטוח שברצונך למחוק את ${props.details.title}?`,
+                  handleDeleteEvent
+                )
+              }
             >
               {xIcon}
             </span>
             <span
-              className="float-left text-danger ml-2 pointer"
+              className="float-left text-danger ml-2 mt-1 pointer"
               hidden={!props.role || !props.role.updateCustomer}
               onClick={handleEditEvent}
             >

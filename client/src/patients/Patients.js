@@ -903,7 +903,7 @@ function Patients(props) {
 
   const handleExport = () => {
     props.user.getIdToken(true).then((idToken) => {
-      const response = fetch(PATIENTS_EXPORT_URL, {
+      fetch(PATIENTS_EXPORT_URL, {
         method: "post",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: idToken }),
@@ -976,7 +976,7 @@ function Patients(props) {
           </div>
           <div className="d-inline-block float-sm-left mt-2 mt-sm-0">
             <button
-              className="btn btn-purple-outline mx-1"
+              className="btn btn-purple-outline mx-1 mt-2 mr-2"
               hidden={
                 !props.role || (!props.role.editProcedures && !props.role.admin)
               }
@@ -985,7 +985,7 @@ function Patients(props) {
               פעולות
             </button>
             <button
-              className="btn btn-purple-outline mx-1"
+              className="btn btn-purple-outline mx-1 mt-2"
               hidden={
                 !props.role ||
                 (!props.role.editPatientCategories && !props.role.admin)
@@ -996,12 +996,12 @@ function Patients(props) {
             </button>
             <button
               onClick={handleExport}
-              className="btn btn-purple-outline mx-1"
+              className="btn btn-purple-outline mx-1 mt-2"
             >
               ייצוא
             </button>
             <button
-              className="btn mx-2 btn-purple text-white"
+              className="btn mx-2 btn-purple text-white mt-2"
               onClick={() => showPatientModal(null)}
               hidden={
                 !props.role || (!props.role.addCustomer && !props.role.admin)
