@@ -102,7 +102,6 @@ function Timeline(props) {
     let days = [];
     for (const day of props.timeline) {
       const dayString = Object.keys(day)[0];
-      // const daySpanTag = <span className="text-info">{dayString}</span>
       const events = day[dayString].flatMap((event, index) => {
         if (event.template === "שיחה עם לקוח" && !patientCallFilter) {
           return [];
@@ -126,6 +125,7 @@ function Timeline(props) {
               details={event}
               deleteEvent={handleEventDeletion}
               editEvent={editEvent}
+              role={props.role}
             />,
           ];
       });
@@ -161,7 +161,7 @@ function Timeline(props) {
   };
 
   return (
-    <div>
+    <div style={{minHeight: 0}}>
       <PatientEventModal
         show={displayEventModal}
         hide={hideEventModal}
@@ -173,84 +173,89 @@ function Timeline(props) {
         updateEvent={handleEventUpdate}
         deleteEvent={handleEventDeletion}
       />
-      <div className="d-flex mt-2 mb-4">
-        <div name="filter" className="flex-grow-1 text-muted d-lg-flex">
-          <div className="mb-3 mb-md-0 ">
-            <span>
+      <div className="d-flex flex-column h-100">
+        <div className="d-flex mt-2 mb-4">
+          <div name="filter" className="flex-grow-1 text-muted d-lg-flex">
+            <div className="mb-3 mb-md-0 ">
+              <span>
+                <button
+                  className="btn text-muted btn-light border py-0 ml-2"
+                  onClick={() => setDisplayFilters(!displayFilters)}
+                >
+                  <b>סינון</b>
+                </button>
+              </span>
               <button
-                className="btn text-muted btn-light border py-0 ml-2"
-                onClick={() => setDisplayFilters(!displayFilters)}
+                hidden={!displayFilters}
+                className="mx-1 btn p-0 text-muted fontSmall shadow-none"
+                onClick={handleFiltersToggle}
               >
-                <b>סינון</b>
+                {filtersToggle ? "הסתר הכל" : "הצג הכל"}
               </button>
-            </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={meetingSummaryFilter}
+                onChange={() => setMeetingSummaryFilter(!meetingSummaryFilter)}
+              ></input>
+              <span className="mr-2">סיכום פגישה </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={procedureFilter}
+                onChange={() => setProcedureFilter(!procedureFilter)}
+              ></input>
+              <span className="mr-2">פעולות </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={patientCallFilter}
+                onChange={() => setPatientCallFilter(!patientCallFilter)}
+              ></input>
+              <span className="mr-2">שיחה עם לקוח </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={meetingScheduleFilter}
+                onChange={() =>
+                  setMeetingScheduleFilter(!meetingScheduleFilter)
+                }
+              ></input>
+              <span className="mr-2">פגישה </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={taskFilter}
+                onChange={() => setTaskFilter(!taskFilter)}
+              ></input>
+              <span className="mr-2">מטלה </span>
+            </div>
+            <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
+              <input
+                type="checkbox"
+                checked={otherFilter}
+                onChange={() => setOtherFilter(!otherFilter)}
+              ></input>
+              <span className="mr-2">אחר </span>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
             <button
-              hidden={!displayFilters}
-              className="mx-1 btn p-0 text-muted fontSmall shadow-none"
-              onClick={handleFiltersToggle}
+              className="btn btn-outline-info py-0 px-2 ml-2"
+              onClick={showEventModal}
+              hidden={!props.role || !props.role.updateCustomer}
             >
-              {filtersToggle ? "הסתר הכל" : "הצג הכל"}
+              הוסף
             </button>
           </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={meetingSummaryFilter}
-              onChange={() => setMeetingSummaryFilter(!meetingSummaryFilter)}
-            ></input>
-            <span className="mr-2">סיכום פגישה </span>
-          </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={procedureFilter}
-              onChange={() => setProcedureFilter(!procedureFilter)}
-            ></input>
-            <span className="mr-2">פעולות </span>
-          </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={patientCallFilter}
-              onChange={() => setPatientCallFilter(!patientCallFilter)}
-            ></input>
-            <span className="mr-2">שיחה עם לקוח </span>
-          </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={meetingScheduleFilter}
-              onChange={() => setMeetingScheduleFilter(!meetingScheduleFilter)}
-            ></input>
-            <span className="mr-2">פגישה </span>
-          </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={taskFilter}
-              onChange={() => setTaskFilter(!taskFilter)}
-            ></input>
-            <span className="mr-2">מטלה </span>
-          </div>
-          <div className="mx-2 my-1 my-lg-0" hidden={!displayFilters}>
-            <input
-              type="checkbox"
-              checked={otherFilter}
-              onChange={() => setOtherFilter(!otherFilter)}
-            ></input>
-            <span className="mr-2">אחר </span>
-          </div>
         </div>
-        <div className="flex-shrink-0">
-          <button
-            className="btn btn-outline-info py-0 px-2 ml-2"
-            onClick={showEventModal}
-          >
-            הוסף
-          </button>
-        </div>
+        <div className="h-100 overflow-auto pl-2 smallScrollBar">{timeline()}</div>
       </div>
-      {timeline()}
     </div>
   );
 }

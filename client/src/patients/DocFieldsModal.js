@@ -30,7 +30,7 @@ function DocFieldsModal(props) {
                 <input
                   ref={fieldARef}
                   className="form-control"
-                  defaultValue={props.customFields[0] || "שדה 1"}
+                  defaultValue={props.customFields[0]}
                 />
               </div>
             </div>
@@ -40,7 +40,7 @@ function DocFieldsModal(props) {
                 <input
                   ref={fieldBRef}
                   className="form-control"
-                  defaultValue={props.customFields[1] || "שדה 2"}
+                  defaultValue={props.customFields[1]}
                 />
               </div>
             </div>
@@ -50,7 +50,7 @@ function DocFieldsModal(props) {
                 <input
                   ref={fieldCRef}
                   className="form-control"
-                  defaultValue={props.customFields[2] || "שדה 3"}
+                  defaultValue={props.customFields[2]}
                 />
               </div>
             </div>
@@ -60,7 +60,7 @@ function DocFieldsModal(props) {
                 <input
                   ref={fieldDRef}
                   className="form-control"
-                  defaultValue={props.customFields[3] || "שדה 4"}
+                  defaultValue={props.customFields[3]}
                 />
               </div>
             </div>

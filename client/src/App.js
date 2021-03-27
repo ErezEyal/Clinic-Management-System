@@ -193,6 +193,9 @@ function App() {
           .then((data) => {
             console.log(data);
             if (!data.result) {
+              if (data.error) {
+                return null;
+              }
               return false;
             } else {
               return true;
@@ -224,6 +227,9 @@ function App() {
           .then((data) => {
             console.log(data);
             if (!data.result) {
+              if (data.error) {
+                return null;
+              }
               return false;
             } else {
               return true;

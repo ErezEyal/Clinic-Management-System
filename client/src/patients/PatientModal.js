@@ -194,8 +194,11 @@ function PatientModal(props) {
               history.push("/");
             }, 1000);
           } else {
-            console.log(result);
-            setErrorMessage("הפעולה נכשלה");
+            if (result === null) {
+              setErrorMessage("תעודת זהות או דרכון זהים קיימים במערכת");
+            } else {
+              setErrorMessage("הפעולה נכשלה");
+            }
           }
         })
         .catch((error) => {

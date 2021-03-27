@@ -226,12 +226,11 @@ function Patient(props) {
         procedures={props.procedures}
         role={props.role}
       />
-      <Container fluid className="d-flex p-4 text-right">
+      <Container fluid className="d-flex p-4 text-right" style={{height: "90vh"}}>
         <div
           className="col-sm-5 col-lg-3 d-none d-sm-block pr-0"
-          style={{ minHeight: "70vh" }}
         >
-          <div className="position-sticky" style={{ top: "4rem" }}>
+          <div className="h-100">
             <PatientProfile
               patient={getUpdatedPatientDetails()}
               editPatient={showPatientModal}
@@ -294,6 +293,7 @@ function Patient(props) {
               deleteRequestWithToken={props.deleteRequestWithToken}
               fetchTimeline={fetchTimeline}
               procedures={props.procedures}
+              role={props.role}
             />
           ) : activeTab === "templates" ? (
             <Templates

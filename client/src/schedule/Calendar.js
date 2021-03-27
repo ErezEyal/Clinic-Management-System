@@ -20,6 +20,9 @@ function Calendar(props) {
   const [displaySecond, setDisplaySecond] = useState(true);
   const [displayThird, setDisplayThird] = useState(true);
   const [patients, setPatients] = useState([]);
+  const [listDays, setListDays] = useState(31);
+  const [filter, setFilter] = useState("");
+  const [delayedFilter, setDelayedFilter] = useState("");
 
   useEffect(() => {
     if (!props.user) {
@@ -78,6 +81,7 @@ function Calendar(props) {
         ),
         end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         mainCalendar: true,
+        filter: filter,
       };
       props.user
         .getIdToken(true)
@@ -95,7 +99,7 @@ function Calendar(props) {
         })
         .catch((error) => console.log(error));
     },
-    [props, displayMain]
+    [props, displayMain, delayedFilter]
   );
 
   const getSecondCalendarEvents = useCallback(
@@ -116,6 +120,7 @@ function Calendar(props) {
         ),
         end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         secondCalendar: true,
+        filter: filter,
       };
       props.user
         .getIdToken(true)
@@ -133,7 +138,7 @@ function Calendar(props) {
         })
         .catch((error) => console.log(error));
     },
-    [props, displaySecond]
+    [props, displaySecond, delayedFilter]
   );
 
   const getThirdCalendarEvents = useCallback(
@@ -154,6 +159,7 @@ function Calendar(props) {
         ),
         end: new Date(fetchInfo.end.setMonth(fetchInfo.end.getMonth() + 1)),
         thirdCalendar: true,
+        filter: filter,
       };
       props.user
         .getIdToken(true)
@@ -171,7 +177,7 @@ function Calendar(props) {
         })
         .catch((error) => console.log(error));
     },
-    [props, displayThird]
+    [props, displayThird, delayedFilter]
   );
 
   const handleEventCreation = (event, calendarName) => {
@@ -256,20 +262,6 @@ function Calendar(props) {
     });
   }, []);
 
-  // const handleEventClick = (eventInfo) => {
-  //   console.log(eventInfo.event);
-  //   setDisplayEventModal(true);
-  //   setSelectedEvent({
-  //     start: eventInfo.event.startStr,
-  //     end: eventInfo.event.endStr,
-  //     title: eventInfo.event.title || "",
-  //     details: eventInfo.event.extendedProps.description || "",
-  //     calendar: eventInfo.event.extendedProps.calendarName,
-  //     patientId: eventInfo.event.extendedProps.patientId,
-  //     id: eventInfo.event.id,
-  //   });
-  // };
-
   const fetchEvents = () => {
     let calendarApi = calendarRef.current.getApi();
     calendarApi.refetchEvents();
@@ -350,7 +342,7 @@ function Calendar(props) {
           },
           monthList: {
             type: "list",
-            duration: { days: 31 },
+            duration: { days: listDays },
             buttonText: "לוח זמנים",
           },
         }}
@@ -368,12 +360,26 @@ function Calendar(props) {
         }}
       />
     ),
-    [props.maxHeight, props.role, showEventModal, sizeSmall]
+    [
+      props.maxHeight,
+      props.role,
+      showEventModal,
+      sizeSmall,
+      listDays,
+      displayMain,
+      displaySecond,
+      displayThird,
+      delayedFilter,
+    ]
   );
 
-  // const calendar = useCallback(() => {
-  //   return <span>hello</span>
-  // })
+  useEffect(() => {
+    const delayEventsFetching = setTimeout(() => {
+      setDelayedFilter(filter)
+    }, 1000);
+
+    return () => clearTimeout(delayEventsFetching);
+  }, [filter]);
 
   return (
     <>
@@ -446,7 +452,31 @@ function Calendar(props) {
             ></input>
             <span className="mr-2">יומן שלישי </span>
           </div>
+          <div className="mr-auto d-inline-block mb-3">
+            <div className="d-inline-block ml-3">
+              <input
+                type="text"
+                placeholder="חפש אירועים"
+                className="form-control "
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              ></input>
+            </div>
+            <select
+              onChange={(e) => setListDays(parseInt(e.target.value))}
+              value={listDays.toString()}
+              class="custom-select d-inline-block pr-4"
+              style={{ width: "9rem", paddingRight: 0 }}
+            >
+              <option value="7">שבוע</option>
+              <option value="14">שבועיים</option>
+              <option value="31">חודש</option>
+              <option value="92">שלושה חודשים</option>
+              <option value="365">שנה</option>
+            </select>
+          </div>
         </div>
+
         {calendar}
       </div>
     </>

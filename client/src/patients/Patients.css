@@ -114,13 +114,13 @@ button.active-tab {
 
 @media (max-width: 600px) { 
   .firstColumnWidth {
-    width: 13rem !important;
+    width: 11rem !important;
   }
-  .patientsTable td, .usersTable td{
+  .usersTable td{
     height: 4rem;
   }
   .tableParentDiv {
-    margin-right: 12.5rem !important;
+    margin-right: 10.5rem !important;
   }
 }
 

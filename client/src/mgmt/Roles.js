@@ -173,9 +173,8 @@ function Roles(props) {
 
   useEffect(() => {
     let tableRows = filteredRoles.map((role, index) => {
-      // this func should not handle filtering
       return (
-        <tr key={index} className="rolesTableRow" style={{ color: "#007A8C" }}>
+        <tr key={index} className="rolesTableRow border" style={{ color: "#007A8C" }}>
           <td
             className="pr-lg-4 firstColumnWidth position-absolute bg-white overflow-hidden"
             style={{ right: "0px" }}
@@ -205,7 +204,7 @@ function Roles(props) {
           <td>
             <div className="text-center">
               <button
-                // disabled={props.role.name === role.name}
+                disabled={props.role && props.role.name === role.name}
                 className={
                   "btn p-0 shadow-none pointer mx-2 " +
                   (role.admin ? "d-none" : "d-inline")
@@ -354,7 +353,8 @@ function Roles(props) {
       <tbody key="2">{tableRows}</tbody>,
     ];
     setTableContent(table);
-  }, [filteredRoles, rolesPage, editRole, filteredRoles, roles]);
+    console.log("another done")
+  }, [filteredRoles, rolesPage, editRole, roles, props.role]);
 
   const handleRoleRemoval = (role) => {
     console.log("removing role", role);
@@ -490,6 +490,8 @@ function Roles(props) {
     setConfirmationAction(null);
     setConfirmationText("");
   };
+
+  if (!props.role) return null;
 
   return (
     <>

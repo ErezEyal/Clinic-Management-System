@@ -133,6 +133,7 @@ function Audit(props) {
       return (
         <tr key={index}>
           <td
+            dir="ltr"
             className="pr-lg-5 firstColumnWidth position-absolute bg-white"
             style={{ right: 0 }}
           >

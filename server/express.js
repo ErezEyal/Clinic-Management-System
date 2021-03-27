@@ -99,9 +99,9 @@ const permissions = {
   "/api/role-permissions": 1,
   "/api/timeline": 1,
   "/api/patient-event": {
-    post: "manageUsers",
-    patch: "manageUsers",
-    delete: "manageUsers",
+    post: "updateCustomer",
+    patch: "updateCustomer",
+    delete: "updateCustomer",
   },
 };
 
@@ -607,11 +607,11 @@ admin.initializeApp({
 const getFileLink = async (path) => {
   const argument = {
     path: path,
-    //     settings: {
-    //         requested_visibility: "password",
-    //         link_password: "123456",
-    //         access: "viewer"
-    //     }
+    // settings: {
+    //   requested_visibility: "password",
+    //   link_password: "123456",
+    //   access: "viewer",
+    // },
   };
 
   let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
@@ -655,17 +655,17 @@ const getTemplateFile = async (path) => {
 };
 
 const getTemplateNames = async (classified) => {
-  let templatesPath = "/תבניות";
+  let classifiedTemplatesPath = "/תבניות/מסמכים חשובים";
   let normalTemplatesPath = "/תבניות/מסמכים רגילים";
   let filesArray = [];
   let dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
   const listFolderArgs = {
-    path: classified ? templatesPath : normalTemplatesPath,
+    path: classified ? classifiedTemplatesPath : normalTemplatesPath,
     recursive: true,
     limit: 50,
   };
 
-  console.log(listFolderArgs.path);
+  console.log("listing templates in folder", listFolderArgs.path);
 
   await dbx
     .filesListFolder(listFolderArgs)
@@ -675,12 +675,12 @@ const getTemplateNames = async (classified) => {
           filesArray.push(file.path_lower);
         }
       });
-      console.log("has_more", response.result.has_more);
+      console.log("has_more templates:", response.result.has_more);
     })
     .catch((error) => {
       console.log(error);
     });
-  console.log(filesArray);
+
   return filesArray;
 };
 
@@ -730,15 +730,17 @@ const getPatientFiles = async (searchString, photos = false) => {
       .filesListFolder(listFolderArgs)
       .then((response) => {
         response.result.entries.forEach((file) => {
-          let isImage = false;
-          imageExtensions.forEach((extension) => {
-            if (file.path_lower.includes(extension)) {
-              isImage = true;
-            }
-          });
-          filesArray.push({ path: file.path_lower });
+          // let isImage = false;
+          // imageExtensions.forEach((extension) => {
+          //   if (file.path_lower.includes(extension)) {
+          //     isImage = true;
+          //   }
+          // });
+          if (file[".tag"] !== "folder") {
+            filesArray.push({ path: file.path_lower });
+          }
         });
-        console.log("has_more", response.result.has_more);
+        console.log("has_more files:", response.result.has_more);
       })
       .catch((error) => {
         console.log(error);
@@ -1216,11 +1218,14 @@ const createPatientDPFolder = (patient) => {
   dbx
     .filesCreateFolderV2(params)
     .then((response) => {
-      if (response.metadata)
-        console.log("created folder at ", response.metadata.path_lower);
+      if (response.result && response.result.metadata)
+        console.log("created folder at ", response.result.metadata.path_lower);
+      else {
+        console.log(response);
+      }
     })
     .catch((error) => {
-      console.error(error);
+      console.error("Could not create folder", error);
       return false;
     });
 };
@@ -1645,7 +1650,7 @@ app.post("/api/calendar-events", authorization, (req, res) => {
     calendar = "third";
   }
   calendarApi
-    .getEvents(req.body.start, req.body.end, calendar)
+    .getEvents(req.body.start, req.body.end, calendar, req.body.filter)
     .then((eventsResponse) => {
       eventsResponse.map((event) => {
         events.push({
@@ -1854,7 +1859,26 @@ app.post("/api/patient-photos", authorization, (req, res) => {
     });
 });
 
-app.post("/api/patient", authorization, (req, res) => {
+app.post("/api/patient", authorization, async (req, res) => {
+  let existingPatient;
+  if (req.body.patient.usePassport) {
+    existingPatient = await db.collection("patients").findOne({
+      $or: [
+        { id: req.body.patient.id },
+        { passport: req.body.patient.passport },
+      ],
+    });
+  } else {
+    existingPatient = await db.collection("patients").findOne({
+      id: req.body.patient.id,
+    });
+  }
+
+  if (existingPatient) {
+    res.json({ result: false, error: "patient exists" });
+    return;
+  }
+
   createPatient(req.body.patient).then((newPatientId) => {
     if (newPatientId) {
       createPatientDPFolder(req.body.patient);
@@ -1929,8 +1953,35 @@ app.post("/api/patient", authorization, (req, res) => {
   });
 });
 
-app.put("/api/patient", authorization, (req, res) => {
+app.put("/api/patient", authorization, async (req, res) => {
   const patientObjectId = req.body.patient._id;
+
+  let existingPatient;
+  if (req.body.patient.usePassport) {
+    existingPatient = await db.collection("patients").findOne({
+      $or: [
+        { id: req.body.patient.id },
+        {
+          $and: [
+            { passport: req.body.patient.passport },
+            { usePassport: true },
+          ],
+        },
+      ],
+      _id: { $ne: ObjectId(patientObjectId) },
+    });
+  } else {
+    existingPatient = await db.collection("patients").findOne({
+      id: req.body.patient.id,
+      _id: { $ne: ObjectId(patientObjectId) },
+    });
+  }
+
+  if (existingPatient) {
+    res.json({ result: false, error: "patient exists" });
+    return;
+  }
+
   updatePatient(req.body.patient).then((result) => {
     res.json({ result: result });
     if (result) {
@@ -2549,16 +2600,19 @@ app.post("/api/templates", authorization, async (req, res) => {
     .findOne({ name: req.userRole })
     .then((role) => {
       if (role.createImportantDocs) {
-        console.log("user has high templates permissions");
+        // console.log("user has high templates permissions");
         return true;
       }
-      console.log("user does NOT have high templates permissions");
+      // console.log("user does NOT have high templates permissions");
       return false;
     });
 
-  getTemplateNames(allTemplatesAccess).then((templateNames) => {
-    res.json(templateNames);
-  });
+  let normalTemplatesList = await getTemplateNames(false);
+  let classifiedList = [];
+  if (allTemplatesAccess) {
+    classifiedList = await getTemplateNames(true);
+  }
+  res.json(normalTemplatesList.concat(classifiedList));
 });
 
 app.post("/api/doc-fields", authorization, async (req, res) => {

@@ -30,10 +30,10 @@ function PatientProfile(props) {
   );
 
   return (
-    <div className="bg-white rounded-lg">
-      <div className="mt-3 mb-4 text-center d-flex">
+    <div className="d-flex flex-column h-100">
+      <div className="bg-light border rounded-sm shadow-sm d-flex">
         <div
-          className="mx-auto flex-shrink-1 pr-xl-3"
+          className="mx-auto flex-shrink-1 p-2"
           style={{ maxWidth: "200px" }}
         >
           <img
@@ -72,7 +72,7 @@ function PatientProfile(props) {
         </div>
       </div>
       <hr />
-      <div className="px-4">
+      <div className="px-4 bg-light border rounded-sm shadow-sm d-flex overflow-auto smallScrollBar">
         <div className="d-flex flex-wrap text-break">
           <div className="my-3 col-sm-6">
             <span className="d-block my-1 text-secondary">שם פרטי</span>

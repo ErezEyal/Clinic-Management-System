@@ -287,22 +287,24 @@ function Patients(props) {
             style={{ right: "0px", backgroundColor: "#F5F8FA" }}
             onClick={() => showPatient(patient)}
           >
-            <img
-              src={
-                patient.picture
-                  ? patient.picture
-                  : patient.gender === "male"
-                  ? "/male1.png"
-                  : "/female1.png"
-              }
-              alt={patient.firstName}
-              width="30px"
-              height="30px"
-              className="d-inline mx-2 rounded-circle"
-            ></img>
-            <span className="pointer">
-              {patient.firstName + " " + patient.lastName}
-            </span>
+            <div className="d-flex">
+              <img
+                src={
+                  patient.picture
+                    ? patient.picture
+                    : patient.gender === "male"
+                    ? "/male1.png"
+                    : "/female1.png"
+                }
+                alt={patient.firstName}
+                width="30px"
+                height="30px"
+                className="mx-2 rounded-circle"
+              ></img>
+              <span className="pointer text-truncate">
+                {patient.firstName + " " + patient.lastName}
+              </span>
+            </div>
           </td>
 
           <td className="">
@@ -328,7 +330,6 @@ function Patients(props) {
 
           <td>
             <span
-              dir="ltr"
               className="pointer d-block text-truncate"
               onClick={() => showPatientModal(patient)}
               title={patient.category ? patient.category.join(", ") : ""}
@@ -372,6 +373,7 @@ function Patients(props) {
 
           <td className="">
             <span
+              dir="ltr"
               className="pointer d-block text-truncate"
               onClick={() => showPatientModal(patient)}
               title={patient.email}
@@ -392,8 +394,8 @@ function Patients(props) {
 
           <td>
             <span
-              dir="ltr"
-              className="pointer"
+              dir="rtl"
+              className="pointer d-block text-truncate"
               onClick={() => showPatientModal(patient)}
               title={patient.comment}
             >
@@ -414,8 +416,7 @@ function Patients(props) {
 
           <td>
             <span
-              dir="ltr"
-              className="pointer"
+              className="pointer text-truncate d-block"
               onClick={() => showPatientModal(patient)}
               title={patient.usePassport ? patient.passport : ""}
             >
@@ -986,13 +987,17 @@ function Patients(props) {
             <button
               className="btn btn-purple-outline mx-1"
               hidden={
-                !props.role || (!props.role.editPatientCategories && !props.role.admin)
+                !props.role ||
+                (!props.role.editPatientCategories && !props.role.admin)
               }
               onClick={() => showPatientCategoriesModal()}
             >
               שיוכים
             </button>
-            <button onClick={handleExport} className="btn btn-purple-outline mx-1">
+            <button
+              onClick={handleExport}
+              className="btn btn-purple-outline mx-1"
+            >
               ייצוא
             </button>
             <button

@@ -331,26 +331,30 @@ function TemplateForm(props) {
           <div className="col-12 px-4">
             <hr />
           </div>
-          <div className="d-flex">
+          <div className="aaaaaaaad-flex">
             <div className="p-3">
-              <label className="ml-3 align-top" title="fieldA">
-                {customFields[0]}
+              <label className="ml-3 align-top" title="fieldA" astyle={{ width: "6rem"}}>
+                {customFields[0] || "-אין שם-"}
               </label>
-              <div className="d-inline-block">
+              <div aclassName="d-inline-block">
                 <textArea
                   name="fieldA"
+                  cols="30"
+                  rows="3"
                   style={{ resize: "both" }}
                   className="form-control"
                 ></textArea>
               </div>
             </div>
-            <div className="p-3">
+            <div className="p-3 ">
               <label className="ml-3 align-top" title="fieldB">
-                {customFields[1]}
+                {customFields[1] || "-אין שם-"}
               </label>
-              <div className="d-inline-block">
+              <div aclassName="d-inline-block">
                 <textArea
                   name="fieldB"
+                  cols="30"
+                  rows="3"
                   style={{ resize: "both" }}
                   className="form-control"
                 ></textArea>
@@ -358,11 +362,13 @@ function TemplateForm(props) {
             </div>
             <div className="p-3">
               <label className="ml-3 align-top" title="fieldC">
-                {customFields[2]}
+                {customFields[2] || "-אין שם-"}
               </label>
-              <div className="d-inline-block">
+              <div aclassName="d-inline-block">
                 <textArea
                   name="fieldC"
+                  cols="30"
+                  rows="3"
                   style={{ resize: "both" }}
                   className="form-control"
                 ></textArea>
@@ -370,11 +376,13 @@ function TemplateForm(props) {
             </div>
             <div className="p-3">
               <label className="ml-3 align-top" title="fieldD">
-                {customFields[3]}
+                {customFields[3] || "-אין שם-"}
               </label>
-              <div className="d-inline-block">
+              <div aclassName="d-inline-block">
                 <textArea
                   name="fieldD"
+                  cols="30"
+                  rows="3"
                   style={{ resize: "both" }}
                   className="form-control"
                 ></textArea>

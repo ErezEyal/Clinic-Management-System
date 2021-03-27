@@ -55,9 +55,9 @@ function Templates(props) {
   );
 
   return (
-    <div>
+    <div className="overflow-auto smallScrollBar">
       <select
-        className="form-control d-inline normalInputSize"
+        className="form-control d-inline normalInputSize mr-2"
         onChange={(e) => setTemplate(e.target.value)}
       >
         {props.templates &&

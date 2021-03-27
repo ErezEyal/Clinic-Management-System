@@ -127,14 +127,14 @@ function TimelineEvent(props) {
           <div>
             <span
               className="float-left text-danger ml-1 pointer"
-              hidden={!isHovered}
+              hidden={!props.role || !props.role.updateCustomer}
               onClick={handleDeleteEvent}
             >
               {xIcon}
             </span>
             <span
               className="float-left text-danger ml-2 pointer"
-              hidden={!isHovered}
+              hidden={!props.role || !props.role.updateCustomer}
               onClick={handleEditEvent}
             >
               {editIcon}

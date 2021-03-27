@@ -8,9 +8,9 @@ let authClient = null;
 let calendar = null;
 
 const calendars = {
-  main: "n73a32jjchpfas7u73a13hfn6o@group.calendar.google.com",
-  second: "6r4rronisn8hru5oirdg5kat4g@group.calendar.google.com",
-  third: "ifp5ci5bg5rfmhcq9hrafjtigs@group.calendar.google.com",
+  main: process.env.MAIN_CALENDAR_ID,
+  second: process.env.SECOND_CALENDAR_ID,
+  third: process.env.THIRD_CALENDAR_ID,
 };
 
 fs.readFile("credentials.json", (err, content) => {
@@ -61,7 +61,7 @@ const getAccessToken = (oAuth2Client) => {
   });
 };
 
-const getEvents = async (startDate, endDate, calendarName) => {
+const getEvents = async (startDate, endDate, calendarName, filter) => {
   const auth = authClient;
   const calendar = google.calendar({ version: "v3", auth });
   return calendar.events
@@ -72,8 +72,10 @@ const getEvents = async (startDate, endDate, calendarName) => {
       maxResults: 1000,
       singleEvents: true,
       orderBy: "startTime",
+      q: filter
     })
     .then((response) => {
+      // console.log("nextPageToken: ", response.data.nextPageToken)
       return response.data.items;
     })
     .catch((err) => {
