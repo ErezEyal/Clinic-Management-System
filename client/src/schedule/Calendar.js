@@ -386,7 +386,7 @@ function Calendar(props) {
       <div
         className={(sizeSmall ? "mt-2" : "mt-4") + " mx-auto text-right"}
         id="calendarArea"
-        style={{ width: "95%", height: "90%" }}
+        style={{ width: "95%", height: "85%" }}
         hidden={isLoading}
       >
         <CalendarEventModal
@@ -459,6 +459,7 @@ function Calendar(props) {
                 placeholder="חפש אירועים"
                 className="form-control "
                 value={filter}
+                style={{width: "8rem"}}
                 onChange={(e) => setFilter(e.target.value)}
               ></input>
             </div>

@@ -64,7 +64,7 @@ function PatientModal(props) {
       setFirstName("");
       setLastName("");
       setEmail("");
-      setEmail("");
+      setAddress("");
       setCity("");
       setBool1("לא");
       setBool2("לא");
@@ -156,6 +156,7 @@ function PatientModal(props) {
     if (!firstName) setErrorMessage("הכנס שם פרטי");
     else if (!lastName) setErrorMessage("הכנס שם משפחה");
     else if (!phone) setErrorMessage("הכנס מספר טלפון");
+    else if (usePassport && !passport) setErrorMessage("הכנס מספר דרכון");
     else if (!category.length) setErrorMessage("בחר שיוך");
     else {
       setErrorMessage("");

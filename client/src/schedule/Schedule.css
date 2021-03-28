@@ -9,7 +9,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 600px) { 
+@media (max-width: 800px) { 
   .fc-button {
     padding: 3px !important;
   }
@@ -44,7 +44,7 @@ table.fc-scrollgrid, table.fc-list-table {
   background-color: white;
 }
 
-@media only screen and (max-width: 700px) {
+@media only screen and (max-width: 800px) {
   h2.fc-toolbar-title {
     font-size: 1.2rem !important;
   }

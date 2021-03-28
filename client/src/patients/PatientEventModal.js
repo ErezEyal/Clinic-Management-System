@@ -323,7 +323,11 @@ function PatientEventModal(props) {
             </button>
             <button
               hidden={
-                !props.event || template === "פגישה" || template === "מטלה"
+                !props.event ||
+                template === "פגישה" ||
+                template === "מטלה" ||
+                !props.role ||
+                (!props.role.admin && !props.role.updateCustomer)
               }
               className="btn btn-primary text-white"
               onClick={updateEvent}

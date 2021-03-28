@@ -140,11 +140,12 @@ function TimelineEvent(props) {
       />
       <div
         className={
-          "d-flex flex-column border-right border shadow-sm pb-2 px-2 rounded-lg my-3 " +
+          "d-flex flex-column border-right border shadow-sm pb-2 px-2 rounded-lg my-3 pointer " +
           (isHovered ? " bg-light" : " bg-white")
         }
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
+        onClick={handleEditEvent}
       >
         <div name="taskCardHeader" className="py-1"></div>
         <div name="taskCardBody">
@@ -153,22 +154,23 @@ function TimelineEvent(props) {
               className="float-left text-danger ml-2 mt-1 pointer"
               hidden={!props.role || !props.role.updateCustomer}
               // onClick={handleDeleteEvent}
-              onClick={() =>
+              onClick={(e) => {
+                e.stopPropagation();
                 promptConfirmation(
                   `האם אתה בטוח שברצונך למחוק את ${props.details.title}?`,
                   handleDeleteEvent
-                )
-              }
+                );
+              }}
             >
               {xIcon}
             </span>
-            <span
+            {/* <span
               className="float-left text-danger ml-2 mt-1 pointer"
-              hidden={!props.role || !props.role.updateCustomer}
+              hidden={!props.role}
               onClick={handleEditEvent}
             >
               {editIcon}
-            </span>
+            </span> */}
             <h5>
               <span className="ml-2" hidden={props.details.template !== "מטלה"}>
                 {checkIcon}

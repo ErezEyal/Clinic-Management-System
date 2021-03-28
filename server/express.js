@@ -1821,11 +1821,13 @@ app.delete("/api/event", authorization, (req, res) => {
 });
 
 app.post("/api/patient-files", authorization, (req, res) => {
-  if (!req.body.id && !req.body.passport) {
+  const patientIdentifier =
+    req.body.usePassport && req.body.passport ? req.body.passport : req.body.id;
+
+  if (!patientIdentifier) {
     return res.json([]);
   }
-
-  getPatientFiles(req.body.id || req.body.passport)
+  getPatientFiles(patientIdentifier)
     .then((files) => {
       res.json(files);
     })
@@ -1848,10 +1850,14 @@ app.post("/api/patient-file", authorization, (req, res) => {
 });
 
 app.post("/api/patient-photos", authorization, (req, res) => {
-  if (!req.body.id && !req.body.passport) {
+  const patientIdentifier =
+    req.body.usePassport && req.body.passport ? req.body.passport : req.body.id;
+
+  if (!patientIdentifier) {
     return res.json([]);
   }
-  getPatientFiles(req.body.id || req.body.passport, true)
+
+  getPatientFiles(patientIdentifier, true)
     .then((files) => {
       res.json(files);
     })

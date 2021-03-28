@@ -475,10 +475,7 @@ function CalendarEventModal(props) {
                     value={patient || null}
                     isRtl={true}
                     isSearchable={true}
-                    isDisabled={
-                      (!props.event && props.patient) ||
-                      (props.event && props.event.patientId)
-                    }
+                    isDisabled={!props.event && props.patient}
                     options={props.patients}
                     onChange={handlePatientChange}
                   />

@@ -172,6 +172,7 @@ function Timeline(props) {
         createEvent={handleEventCreation}
         updateEvent={handleEventUpdate}
         deleteEvent={handleEventDeletion}
+        role={props.role}
       />
       <div className="d-flex flex-column h-100">
         <div className="d-flex mt-2 mb-4">
