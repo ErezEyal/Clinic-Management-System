@@ -357,6 +357,11 @@ function PatientModal(props) {
                       className="rounded-lg shadow border border-light"
                     ></img>
                   </label>
+                  <div className="text-center" onClick={() => setPicture(null)} hidden={!picture}>
+                    <button className="btn p-0 fontSmall">
+                      הסר תמונה
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="flex-grow-1 pr-3">
@@ -1036,11 +1041,11 @@ function PatientModal(props) {
                   }
                   // data-toggle="dropdown"
                   onClick={() =>
-                      promptConfirmation(
-                        `האם אתה בטוח שברצונך להסיר את ${props.patient.firstName} ${props.patient.lastName}?`,
-                        handleDelete
-                      )
-                    }
+                    promptConfirmation(
+                      `האם אתה בטוח שברצונך להסיר את ${props.patient.firstName} ${props.patient.lastName}?`,
+                      handleDelete
+                    )
+                  }
                 >
                   <span>הסר לקוח</span>
                 </button>
