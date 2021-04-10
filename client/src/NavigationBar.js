@@ -53,7 +53,7 @@ function NavigationBar(props) {
       className="text-right"
     >
       <Navbar.Brand href={props.user ? "/patients" : "/login"}>
-        Barel Clinic
+        Clinic Home
       </Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">

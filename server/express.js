@@ -109,10 +109,10 @@ if (process.argv[2] === "prod") {
   console.log("# Production #");
   const options = {
     key: fs.readFileSync(
-      "/etc/letsencrypt/live/app.barelclinic.com/privkey.pem"
+      "/route/privkey.pem"
     ),
     cert: fs.readFileSync(
-      "/etc/letsencrypt/live/app.barelclinic.com/fullchain.pem"
+      "/route/fullchain.pem"
     ),
   };
   app.use(express.static(path.join(__dirname, "build"), { index: false }));
